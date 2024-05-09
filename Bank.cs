@@ -30,6 +30,15 @@ class Bank {
         return loggedInUser;
     }
 
+    public User GetAccountById(int id) {
+        foreach (var user in users) {
+            if (user.GetUserId() == id) {
+                return user;
+            }
+        }
+        return null;
+    }
+
     public bool CheckLogin(string username, string password) {
         foreach (var user in users) {
             if (user.ValidateCredentials(username, password)) {

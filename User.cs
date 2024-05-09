@@ -12,7 +12,7 @@ class User : Bank
         this.Username = Username;
         this.Password = Password;
         this.IsAdmin = IsAdmin;
-        this.Balance = 1000;
+        Balance = 1000;
         Console.Clear();
         Console.WriteLine("New bank account created!");
     }
@@ -35,6 +35,22 @@ class User : Bank
 
     public string GetAccountBalance() {
         return Balance.ToString("C"); // Display & format balance in Euros
+    }
+
+    public int GetNormalAccountBalance() {
+        return Balance;
+    }
+
+    public bool CheckPassword(string password) {
+        return Password.Equals(password);
+    }
+
+    public void Withdraw(int amount) {
+        Balance = Balance - amount;
+    }
+
+    public void Deposit(int amount) {
+        Balance = Balance + amount;
     }
 
     public bool ValidateCredentials(string username, string password) {

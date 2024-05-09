@@ -15,8 +15,6 @@ namespace MyApp
             Console.WriteLine("Press any key to continue.");
             Console.ReadKey();
             Bank bank = new Bank(1, "SEB");
-            User user = new User(1, "SEB", 0, "Test", "Guest", "test123", false);
-            Console.WriteLine($"Welcome back {user.GetUsername()}");
             GuestMenu(bank);
         }
 
@@ -123,7 +121,8 @@ namespace MyApp
                         }
 
                         // Create new user account
-                        User newUser = new User(1, bank.GetBankName(), 0, name, newUsername, newPassword, false);
+                        List<User> users = bank.GetAllUsers();
+                        User newUser = new User(1, bank.GetBankName(), users.Count + 1, name, newUsername, newPassword, false);
                         bank.AddUser(newUser);
 
                         // Ask user if they want to auto-login to the new account
@@ -182,7 +181,60 @@ namespace MyApp
                 {
                     case ConsoleKey.D1:
                         stop = true;
+                        Console.Clear();
+                        // Create a money transfer instance
+                        MoneyTransfer moneyTransfer = new MoneyTransfer(bank);
 
+                        bool backToMainMenu = false;
+                        while (!backToMainMenu) {
+                            // Ask user for transfer details
+                            Console.WriteLine("Enter transfer details:");
+                            int senderAccountId = user.GetUserId();
+
+                            Console.Write("Receiver Account ID: ");
+                            int receiverAccountId = 0;
+                            while (!int.TryParse(Console.ReadLine(), out receiverAccountId) || receiverAccountId == senderAccountId) {
+                                Console.Clear();
+                                Console.WriteLine("Invalid input. Please enter a valid receiver account ID!");
+                                Console.Write("Receiver Account ID: ");
+                            }
+
+                            Console.Write("Amount to transfer: ");
+                            int amount = 0;
+                            while (!int.TryParse(Console.ReadLine(), out amount)) {
+                                Console.Clear();
+                                Console.WriteLine("Invalid input. Please enter a valid amount to transfer!");
+                                Console.Write("Amount to transfer: ");
+                            }
+                            Console.WriteLine($"Are you sure that you want to transfer {amount:C} to {bank.GetAccountById(receiverAccountId).GetUserName()}'s account? (yes/no)");
+                            string? sure = Console.ReadLine();
+                            if (sure?.ToLower() != "yes") {
+                                stop = false;
+                                Console.Clear();
+                                Console.WriteLine("Transfer terminated.");
+                            }
+                            Console.Write("Confirmation Password: ");
+                            string? confirmationPassword = Console.ReadLine();
+
+                            // Perform money transfer
+                            bool transferSuccess = moneyTransfer.TransferMoney(senderAccountId, receiverAccountId, amount, confirmationPassword);
+
+                            if (transferSuccess) {
+                                Console.WriteLine("Transfer successful.");
+                                Console.WriteLine($"New balance: {bank.GetAccountById(senderAccountId).GetAccountBalance()}");
+                                Console.ReadKey();
+                                MainMenu(bank);
+                            } else {
+                                Console.WriteLine("Transfer failed.");
+
+                                Console.WriteLine("Do you want to try again? (yes/no)");
+                                string? tryAgainResponse = Console.ReadLine();
+                                if (tryAgainResponse?.ToLower() == "yes") {
+                                    stop = false;
+                                    Console.Clear();
+                                }
+                            }
+                        }
                         break;
                     case ConsoleKey.D2:
                         stop = true;
@@ -202,7 +254,7 @@ namespace MyApp
                         break;
                     case ConsoleKey.D6:
                         stop = true;
-
+                        GuestMenu(bank);
                         break;
                     case ConsoleKey.D7:
                         stop = true;
