@@ -70,6 +70,14 @@ class User : Bank
         return $"[{invoices.Count}]";
     }
 
+    public void printUserDetails() {
+        Console.WriteLine($"Account ID: {UserId} ");
+        Console.WriteLine($"Username: {Username}");
+        Console.WriteLine($"Name: {Name}  ");
+        Console.WriteLine($"------------------------");
+        Console.WriteLine($"Administrator: {IsAdmin}\n");
+    }
+
     public void ReceiveInvoice(Invoice invoice) {
         invoices.Add(invoice);
         Console.WriteLine("Received Invoice:");

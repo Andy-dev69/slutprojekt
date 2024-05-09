@@ -277,8 +277,11 @@ namespace MyApp
                         }   
                         break;
                     case ConsoleKey.D4:
-                        stop = true;
-
+                        Console.Clear();
+                        user.printUserDetails();
+                        Console.Write("Press any key to go back!");
+                        Console.ReadKey();
+                        Console.Clear();
                         break;
                     case ConsoleKey.D5:
                         stop = true;
