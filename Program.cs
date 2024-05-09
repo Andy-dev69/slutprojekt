@@ -32,6 +32,7 @@ namespace MyApp
                 Console.WriteLine("                            ");
                 Console.WriteLine("  3. Exit                   ");
                 Console.WriteLine("└──────────────────────────┘");
+                Console.Write("Input: ");
 
                 ConsoleKeyInfo key = Console.ReadKey();
 
@@ -53,6 +54,7 @@ namespace MyApp
                             if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password)) {
                                 if (bank.CheckLogin(username, password)) {
                                     Console.WriteLine("Login successful!");
+                                    MainMenu(bank);
                                     break;
                                 }
                                 else {
@@ -134,6 +136,7 @@ namespace MyApp
                             bank.CheckLogin(newUsername, newPassword);
                             Console.WriteLine($"Logged in as: {bank.GetLoggedInUser().GetUsername()}");
                             Console.ReadLine();
+                            MainMenu(bank);
                         } else {
                             stop = false;
                         }
@@ -145,7 +148,69 @@ namespace MyApp
                         Console.WriteLine("  System Terminated!  ");
                         Console.WriteLine("└────────────────────┘");
                         break;
+                    default:
+                        Console.Clear();
+                        break;
+                }
+            }
+        }
 
+        static void MainMenu(Bank bank)
+        {
+            Console.Clear();
+            bool stop = false;
+            while (!stop)
+            {
+                User user = bank.GetLoggedInUser();
+                Console.WriteLine($"Logged in as: {user.GetUsername()}");
+                Console.WriteLine($"Balance: {user.GetAccountBalance()} ");
+                Console.WriteLine("┌──────────── MENU ────────────┐");
+                Console.WriteLine("  1. Transfer Money             ");
+                Console.WriteLine("  2. Request Money              ");
+                Console.WriteLine("  3. Last Payments              ");
+                Console.WriteLine("  4. Check Invoices             ");
+                Console.WriteLine("  5. Account Details            ");
+                Console.WriteLine("  6. Switch Account             ");
+                Console.WriteLine("                                ");
+                Console.WriteLine("  7. Exit                       ");
+                Console.WriteLine("└──────────────────────────────┘");
+                Console.Write("Input: ");
+
+                ConsoleKeyInfo key = Console.ReadKey();
+
+                switch (key.Key)
+                {
+                    case ConsoleKey.D1:
+                        stop = true;
+
+                        break;
+                    case ConsoleKey.D2:
+                        stop = true;
+
+                        break;
+                    case ConsoleKey.D3:
+                        stop = true;
+
+                        break;
+                    case ConsoleKey.D4:
+                        stop = true;
+
+                        break;
+                    case ConsoleKey.D5:
+                        stop = true;
+
+                        break;
+                    case ConsoleKey.D6:
+                        stop = true;
+
+                        break;
+                    case ConsoleKey.D7:
+                        stop = true;
+                        Console.Clear();
+                        Console.WriteLine("┌────────────────────┐");
+                        Console.WriteLine("  System Terminated!  ");
+                        Console.WriteLine("└────────────────────┘");
+                        break;
                     default:
                         Console.Clear();
                         break;
