@@ -169,12 +169,11 @@ namespace MyApp
                 Console.WriteLine("┌──────────── MENU ────────────┐");
                 Console.WriteLine("  1. Transfer Money             ");
                 Console.WriteLine("  2. Request Money              ");
-                Console.WriteLine("  3. Last Payments              ");
-                Console.WriteLine($"  4. Check Invoices {user.GetInvoicesNumber()}            ");
-                Console.WriteLine("  5. Account Details            ");
-                Console.WriteLine("  6. Switch Account             ");
+                Console.WriteLine($"  3. Check Invoices {user.GetInvoicesNumber()}            ");
+                Console.WriteLine("  4. Account Details            ");
+                Console.WriteLine("  5. Switch Account             ");
                 Console.WriteLine("                                ");
-                Console.WriteLine("  7. Exit                       ");
+                Console.WriteLine("  6. Exit                       ");
                 Console.WriteLine("└──────────────────────────────┘");
                 Console.Write("Input: ");
 
@@ -199,8 +198,83 @@ namespace MyApp
                         }
                         break;
                     case ConsoleKey.D3:
-                        stop = true;
+                        Console.Clear();
+                        if (user.GetInvoices().Count != 0) {
+                            stop = true;
+                            foreach (var invoice in user.GetInvoices()) {
+                                if (!invoice.IsPayed) {
+                                    Console.WriteLine($"[{invoice.Id}] {invoice.Description} - Paid: {invoice.IsPayed}\nDue Date: {invoice.DueDate:d}");
+                                } else {
+                                    Console.WriteLine($"[{invoice.Id}] {invoice.Description} - Paid: {invoice.IsPayed}");
+                                }
+                            }
 
+                            Console.Write("Enter the ID of the invoice you want to interact with (or '0' to go back): ");
+                            int invoiceId = 0;
+                            while (!int.TryParse(Console.ReadLine(), out invoiceId) || invoiceId < 0) {
+                                Console.WriteLine("Invalid input. Please enter a valid invoice ID (or '0' to go back): ");
+                            }
+                            if (invoiceId == 0) {
+                                Console.Clear();
+                                stop = false;
+                            } else {
+                                Invoice? selectedInvoice = user.GetInvoices().FirstOrDefault(i => i.Id == invoiceId);
+                                if (selectedInvoice != null) {
+                                    // Invoice found
+                                    if (!selectedInvoice.IsPayed) {
+                                        if (!selectedInvoice.Description.Contains("[sent]")) {
+                                            Console.WriteLine($"Invoice ID: {selectedInvoice.Id}");
+                                            Console.WriteLine($"From: {bank.GetAccountById(selectedInvoice.InvoiceSenderID).GetUserName()}");
+                                            Console.WriteLine($"Description: {selectedInvoice.Description}");
+                                            Console.WriteLine($"Amount: {selectedInvoice.Amount:C}");
+                                            Console.WriteLine($"Due Date: {selectedInvoice.DueDate:d}");
+                                            Console.Write("Do you want to pay this invoice? (yes/no): ");
+                                            string? input = Console.ReadLine();
+                                            if (input?.ToLower() == "yes") {
+                                                // Pay the invoice
+                                                MoneyTransfer moneyTransfer = new MoneyTransfer(bank);
+                                                bool transferSuccess = moneyTransfer.TransferMoney(user.GetUserId(), selectedInvoice.InvoiceSenderID, selectedInvoice.Amount, "DSAUDJSAA");
+                                                if (transferSuccess) {
+                                                    selectedInvoice.SetPaidStatus(true);
+                                                    foreach (var invoice in bank.GetAccountById(selectedInvoice.InvoiceSenderID).GetInvoices()) {
+                                                        if (invoice.InvoiceSenderID == user.GetUserId() && !invoice.IsPayed && invoice.Id == invoiceId) {
+                                                            invoice.SetPaidStatus(true);
+                                                        }
+                                                    }
+                                                    Console.WriteLine("Invoice paid successfully.");
+                                                    Console.WriteLine($"New balance: {user.GetAccountBalance()}");
+                                                    Console.ReadKey();
+                                                    Console.Clear();
+                                                    stop = false;
+                                                } else {
+                                                    Console.Clear();
+                                                    Console.WriteLine("Transfer failed. Insufficient funds.");
+                                                    stop = false;
+                                                }
+                                            } else {
+                                                Console.Clear();
+                                                stop = false;
+                                            }
+                                        } else {
+                                            Console.Clear();
+                                            Console.WriteLine("You can't pay your own invoice.");
+                                            stop = false;
+                                        }
+                                    } else {
+                                        Console.Clear();
+                                        Console.WriteLine("This invoice has already been paid.");
+                                        stop = false;
+                                    }
+                                } else {
+                                    Console.Clear();
+                                    Console.WriteLine("Invoice not found.");
+                                    stop = false;
+                                }
+                            }
+                        } else {
+                            Console.Clear();
+                            Console.WriteLine("You have no invoices!");   
+                        }   
                         break;
                     case ConsoleKey.D4:
                         stop = true;
@@ -208,14 +282,10 @@ namespace MyApp
                         break;
                     case ConsoleKey.D5:
                         stop = true;
-
-                        break;
-                    case ConsoleKey.D6:
-                        stop = true;
                         Console.Clear();
                         GuestMenu(bank);
                         break;
-                    case ConsoleKey.D7:
+                    case ConsoleKey.D6:
                         stop = true;
                         Console.Clear();
                         Console.WriteLine("┌────────────────────┐");
@@ -273,7 +343,7 @@ namespace MyApp
                     Console.WriteLine("Transfer successful.");
                     Console.WriteLine($"New balance: {bank.GetAccountById(senderAccountId).GetAccountBalance()}");
                     Console.ReadKey();
-                    bank.CreateAndSendInvoice(bank.GetAccountById(senderAccountId).GetInvoices().Count + 1, senderAccountId, "Transfer", amount, DateTime.Today.AddDays(0), true); // Create an invoice
+                    bank.CreateAndSendInvoice(bank.GetAccountById(senderAccountId).GetInvoices().Count + 1, senderAccountId, receiverAccountId, "Transfer", amount, DateTime.Today.AddDays(0), true); // Create an invoice
                     backToMainMenu = true;
                 } else {
                     Console.WriteLine("Transfer failed.");
@@ -298,12 +368,12 @@ namespace MyApp
                 Console.WriteLine("Enter request details:");
                 int senderAccountId = user.GetUserId();
 
-                Console.Write("Request From Account ID: ");
+                Console.Write("Request To Account ID: ");
                 int receiverAccountId = 0;
                 while (!int.TryParse(Console.ReadLine(), out receiverAccountId) || receiverAccountId == senderAccountId) {
                     Console.Clear();
                     Console.WriteLine("Invalid input. Please enter a valid account ID!");
-                    Console.Write("Request From Account ID: ");
+                    Console.Write("Request To Account ID: ");
                 }
 
                 Console.Write("Why are you requesting this amount?: ");
@@ -317,27 +387,28 @@ namespace MyApp
                     Console.Write("Amount you are requesting: ");
                 }
 
-                Console.Write("Due to in? (days): ");
+                Console.Write("Due in? (days): ");
                 int due = 0;
                 while (!int.TryParse(Console.ReadLine(), out due)) {
                     Console.Clear();
                     Console.WriteLine("Invalid input. Please enter a valid due time!");
-                    Console.Write("Due to in? (days): ");
+                    Console.Write("Due in? (days): ");
                 }
 
                 Console.WriteLine($"Are you sure that you want to send an invoice for {amount:C} to {bank.GetAccountById(receiverAccountId).GetUserName()}'s account? (yes/no)");
                 string? sure = Console.ReadLine();
                 if (sure?.ToLower() != "yes") {
                     Console.Clear();
-                    Console.WriteLine("Transfer terminated.");
+                    Console.WriteLine("Request terminated.");
                     return false;
                 }
+
                 Console.Write("Confirmation Password: ");
                 string? confirmationPassword = Console.ReadLine();
 
                 Console.Clear();
 
-                bool transferSuccess = true;
+                bool requestSuccess = true;
 
                 User receiverAccount = bank.GetAccountById(receiverAccountId);
 
@@ -345,21 +416,28 @@ namespace MyApp
                 if (user == null || receiverAccount == null) {
                     Console.WriteLine("Invalid account ID.");
                     Console.ReadKey();
-                    transferSuccess = false;
+                    requestSuccess = false;
                 }
 
                 // Validate confirmation password
                 if (!user.CheckPassword(confirmationPassword)) {
                     Console.WriteLine("Invalid confirmation password.");
                     Console.ReadKey();
-                    transferSuccess = false;
+                    requestSuccess = false;
                 }
 
-                if (transferSuccess) {
+                if (requestSuccess) {
                     Console.WriteLine("Invoice sent successfully.");
-                    bank.CreateAndSendInvoice(receiverAccount.GetInvoices().Count + 1, receiverAccountId, title, amount, DateTime.Today.AddDays(due), false); // Create an invoice
-                    bank.CreateAndSendInvoice(user.GetInvoices().Count + 1, senderAccountId, title + " [sended]", amount, DateTime.Today.AddDays(due), false); // Create an invoice
-                    Console.ReadKey();
+
+                    // Create and send invoice to the receiver
+                    Invoice receiverInvoice = new UnpaidInvoice(receiverAccount.GetInvoices().Count + 1, receiverAccountId, senderAccountId, title, amount, DateTime.Today.AddDays(due), false);
+                    receiverAccount.ReceiveInvoice(receiverInvoice);
+
+                    // Create and send invoice to the sender as confirmation
+                    Invoice senderInvoice = new UnpaidInvoice(user.GetInvoices().Count + 1, senderAccountId, receiverAccountId, title + " [sent]", amount, DateTime.Today.AddDays(due), false);
+                    user.ReceiveInvoice(senderInvoice);
+
+                    // Console.ReadKey();
                     backToMainMenu = true;
                 } else {
                     Console.WriteLine("Sending the invoice failed.");

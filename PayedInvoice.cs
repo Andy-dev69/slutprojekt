@@ -1,8 +1,8 @@
 class PaidInvoice : Invoice {
     public DateTime PaymentDate { get; set; }
 
-    public PaidInvoice(int id, int userId, string description, int amount, DateTime dueDate, DateTime paymentDate)
-        : base(id, userId, description, amount, dueDate) {
+    public PaidInvoice(int id, int userId, int invoiceSenderID, string description, int amount, DateTime dueDate, DateTime paymentDate, bool isPayed)
+        : base(id, userId, invoiceSenderID, description, amount, dueDate, isPayed) {
         PaymentDate = paymentDate;
     }
 

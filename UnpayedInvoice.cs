@@ -1,6 +1,6 @@
 
 class UnpaidInvoice : Invoice {
-    public UnpaidInvoice(int id, int userId, string description, int amount, DateTime dueDate)
-        : base(id, userId, description, amount, dueDate) {
+    public UnpaidInvoice(int id, int userId, int invoiceSenderID, string description, int amount, DateTime dueDate, bool isPayed)
+        : base(id, userId, invoiceSenderID, description, amount, dueDate, isPayed) {
     }
 }

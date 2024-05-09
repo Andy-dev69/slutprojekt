@@ -49,13 +49,13 @@ class Bank {
         return false;
     }
 
-    public void CreateAndSendInvoice(int id, int userId, string description, int amount, DateTime dueDate, bool isPaid) {
+    public void CreateAndSendInvoice(int id, int userId, int invoiceSenderID, string description, int amount, DateTime dueDate, bool isPaid) {
         Invoice invoice;
         if (isPaid) {
             DateTime paymentDate = DateTime.Now;
-            invoice = new PaidInvoice(id, userId, description, amount, dueDate, paymentDate);
+            invoice = new PaidInvoice(id, userId, invoiceSenderID,  description, amount, dueDate, paymentDate, isPaid);
         } else {
-            invoice = new UnpaidInvoice(id, userId, description, amount, dueDate);
+            invoice = new UnpaidInvoice(id, userId, invoiceSenderID, description, amount, dueDate, isPaid);
         }
 
         // Send invoice to user
