@@ -5,12 +5,14 @@ class User : Bank
     private bool IsAdmin { get; set; }
     private string Username { get; set; }
     private string Password { get; set; }
+    private int Balance { get; set; }
     public User(int Id, string BankName, int UserId, string Name, string Username, string Password, bool IsAdmin) : base(Id, BankName) {
         this.UserId = UserId;
         this.Name = Name;
         this.Username = Username;
         this.Password = Password;
         this.IsAdmin = IsAdmin;
+        this.Balance = 1000;
         Console.Clear();
         Console.WriteLine("New bank account created!");
     }
@@ -29,6 +31,10 @@ class User : Bank
 
     public bool IsUserAdmin() {
         return IsAdmin;
+    }
+
+    public string GetAccountBalance() {
+        return Balance.ToString("C"); // Display & format balance in Euros
     }
 
     public bool ValidateCredentials(string username, string password) {
