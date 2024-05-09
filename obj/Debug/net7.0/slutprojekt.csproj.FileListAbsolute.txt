@@ -1,0 +1,14 @@
+C:\Users\marrioandrei.gheorg\OneDrive - Academedia\Desktop\slutprojekt\obj\Debug\net7.0\slutprojekt.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\marrioandrei.gheorg\OneDrive - Academedia\Desktop\slutprojekt\obj\Debug\net7.0\slutprojekt.AssemblyInfoInputs.cache
+C:\Users\marrioandrei.gheorg\OneDrive - Academedia\Desktop\slutprojekt\obj\Debug\net7.0\slutprojekt.AssemblyInfo.cs
+C:\Users\marrioandrei.gheorg\OneDrive - Academedia\Desktop\slutprojekt\obj\Debug\net7.0\slutprojekt.csproj.CoreCompileInputs.cache
+C:\Users\marrioandrei.gheorg\OneDrive - Academedia\Desktop\slutprojekt\bin\Debug\net7.0\slutprojekt.exe
+C:\Users\marrioandrei.gheorg\OneDrive - Academedia\Desktop\slutprojekt\bin\Debug\net7.0\slutprojekt.deps.json
+C:\Users\marrioandrei.gheorg\OneDrive - Academedia\Desktop\slutprojekt\bin\Debug\net7.0\slutprojekt.runtimeconfig.json
+C:\Users\marrioandrei.gheorg\OneDrive - Academedia\Desktop\slutprojekt\bin\Debug\net7.0\slutprojekt.dll
+C:\Users\marrioandrei.gheorg\OneDrive - Academedia\Desktop\slutprojekt\bin\Debug\net7.0\slutprojekt.pdb
+C:\Users\marrioandrei.gheorg\OneDrive - Academedia\Desktop\slutprojekt\obj\Debug\net7.0\slutprojekt.dll
+C:\Users\marrioandrei.gheorg\OneDrive - Academedia\Desktop\slutprojekt\obj\Debug\net7.0\refint\slutprojekt.dll
+C:\Users\marrioandrei.gheorg\OneDrive - Academedia\Desktop\slutprojekt\obj\Debug\net7.0\slutprojekt.pdb
+C:\Users\marrioandrei.gheorg\OneDrive - Academedia\Desktop\slutprojekt\obj\Debug\net7.0\slutprojekt.genruntimeconfig.cache
+C:\Users\marrioandrei.gheorg\OneDrive - Academedia\Desktop\slutprojekt\obj\Debug\net7.0\ref\slutprojekt.dll
