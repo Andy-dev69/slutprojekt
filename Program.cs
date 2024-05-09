@@ -15,6 +15,9 @@ namespace MyApp
             Console.WriteLine("Press any key to continue.");
             Console.ReadKey();
             Bank bank = new Bank(1, "SEB");
+            bank.AddUser(new User(1, bank.GetBankName(), 0, "Guest", "none", "none", false));
+            bank.AddUser(new User(1, bank.GetBankName(), 1, "Marrio", "marrio", "test123", false));
+            bank.AddUser(new User(1, bank.GetBankName(), 2, "Andrei", "andrei", "test123", false));
             GuestMenu(bank);
         }
 
@@ -167,7 +170,7 @@ namespace MyApp
                 Console.WriteLine("  1. Transfer Money             ");
                 Console.WriteLine("  2. Request Money              ");
                 Console.WriteLine("  3. Last Payments              ");
-                Console.WriteLine("  4. Check Invoices             ");
+                Console.WriteLine($"  4. Check Invoices {user.GetInvoicesNumber()}            ");
                 Console.WriteLine("  5. Account Details            ");
                 Console.WriteLine("  6. Switch Account             ");
                 Console.WriteLine("                                ");
@@ -180,65 +183,20 @@ namespace MyApp
                 switch (key.Key)
                 {
                     case ConsoleKey.D1:
-                        stop = true;
                         Console.Clear();
-                        // Create a money transfer instance
-                        MoneyTransfer moneyTransfer = new MoneyTransfer(bank);
-
-                        bool backToMainMenu = false;
-                        while (!backToMainMenu) {
-                            // Ask user for transfer details
-                            Console.WriteLine("Enter transfer details:");
-                            int senderAccountId = user.GetUserId();
-
-                            Console.Write("Receiver Account ID: ");
-                            int receiverAccountId = 0;
-                            while (!int.TryParse(Console.ReadLine(), out receiverAccountId) || receiverAccountId == senderAccountId) {
-                                Console.Clear();
-                                Console.WriteLine("Invalid input. Please enter a valid receiver account ID!");
-                                Console.Write("Receiver Account ID: ");
-                            }
-
-                            Console.Write("Amount to transfer: ");
-                            int amount = 0;
-                            while (!int.TryParse(Console.ReadLine(), out amount)) {
-                                Console.Clear();
-                                Console.WriteLine("Invalid input. Please enter a valid amount to transfer!");
-                                Console.Write("Amount to transfer: ");
-                            }
-                            Console.WriteLine($"Are you sure that you want to transfer {amount:C} to {bank.GetAccountById(receiverAccountId).GetUserName()}'s account? (yes/no)");
-                            string? sure = Console.ReadLine();
-                            if (sure?.ToLower() != "yes") {
-                                stop = false;
-                                Console.Clear();
-                                Console.WriteLine("Transfer terminated.");
-                            }
-                            Console.Write("Confirmation Password: ");
-                            string? confirmationPassword = Console.ReadLine();
-
-                            // Perform money transfer
-                            bool transferSuccess = moneyTransfer.TransferMoney(senderAccountId, receiverAccountId, amount, confirmationPassword);
-
-                            if (transferSuccess) {
-                                Console.WriteLine("Transfer successful.");
-                                Console.WriteLine($"New balance: {bank.GetAccountById(senderAccountId).GetAccountBalance()}");
-                                Console.ReadKey();
-                                MainMenu(bank);
-                            } else {
-                                Console.WriteLine("Transfer failed.");
-
-                                Console.WriteLine("Do you want to try again? (yes/no)");
-                                string? tryAgainResponse = Console.ReadLine();
-                                if (tryAgainResponse?.ToLower() == "yes") {
-                                    stop = false;
-                                    Console.Clear();
-                                }
-                            }
+                        stop = Transfer(bank, user);
+                        Console.Clear();
+                        if (stop) {
+                            MainMenu(bank);
                         }
                         break;
                     case ConsoleKey.D2:
-                        stop = true;
-
+                        Console.Clear();
+                        stop = Request(bank, user);
+                        Console.Clear();
+                        if (stop) {
+                            MainMenu(bank);
+                        }
                         break;
                     case ConsoleKey.D3:
                         stop = true;
@@ -254,6 +212,7 @@ namespace MyApp
                         break;
                     case ConsoleKey.D6:
                         stop = true;
+                        Console.Clear();
                         GuestMenu(bank);
                         break;
                     case ConsoleKey.D7:
@@ -268,6 +227,154 @@ namespace MyApp
                         break;
                 }
             }
+        }
+
+        static bool Transfer(Bank bank, User user) {
+            // Create a money transfer instance
+            MoneyTransfer moneyTransfer = new MoneyTransfer(bank);
+
+            bool backToMainMenu = false;
+            while (!backToMainMenu) {
+                // Ask user for transfer details
+                Console.WriteLine("Enter transfer details:");
+                int senderAccountId = user.GetUserId();
+
+                Console.Write("Receiver Account ID: ");
+                int receiverAccountId = 0;
+                while (!int.TryParse(Console.ReadLine(), out receiverAccountId) || receiverAccountId == senderAccountId) {
+                    Console.Clear();
+                    Console.WriteLine("Invalid input. Please enter a valid receiver account ID!");
+                    Console.Write("Receiver Account ID: ");
+                }
+
+                Console.Write("Amount to transfer: ");
+                int amount = 0;
+                while (!int.TryParse(Console.ReadLine(), out amount)) {
+                    Console.Clear();
+                    Console.WriteLine("Invalid input. Please enter a valid amount to transfer!");
+                    Console.Write("Amount to transfer: ");
+                }
+                Console.WriteLine($"Are you sure that you want to transfer {amount:C} to {bank.GetAccountById(receiverAccountId).GetUserName()}'s account? (yes/no)");
+                string? sure = Console.ReadLine();
+                if (sure?.ToLower() != "yes") {
+                    Console.Clear();
+                    Console.WriteLine("Transfer terminated.");
+                    return false;
+                }
+                Console.Write("Confirmation Password: ");
+                string? confirmationPassword = Console.ReadLine();
+
+                Console.Clear();
+
+                // Perform money transfer
+                bool transferSuccess = moneyTransfer.TransferMoney(senderAccountId, receiverAccountId, amount, confirmationPassword);
+
+                if (transferSuccess) {
+                    Console.WriteLine("Transfer successful.");
+                    Console.WriteLine($"New balance: {bank.GetAccountById(senderAccountId).GetAccountBalance()}");
+                    Console.ReadKey();
+                    bank.CreateAndSendInvoice(bank.GetAccountById(senderAccountId).GetInvoices().Count + 1, senderAccountId, "Transfer", amount, DateTime.Today.AddDays(0), true); // Create an invoice
+                    backToMainMenu = true;
+                } else {
+                    Console.WriteLine("Transfer failed.");
+
+                    Console.WriteLine("Do you want to try again? (yes/no)");
+                    string? tryAgainResponse = Console.ReadLine();
+                    if (tryAgainResponse?.ToLower() == "yes") {
+                        Console.Clear();
+                        return false;
+                    } else {
+                        backToMainMenu = true;
+                    }
+                }
+            }
+            return true;
+        }
+        
+        static bool Request(Bank bank, User user) {
+            bool backToMainMenu = false;
+            while (!backToMainMenu) {
+                // Ask user for request details
+                Console.WriteLine("Enter request details:");
+                int senderAccountId = user.GetUserId();
+
+                Console.Write("Request From Account ID: ");
+                int receiverAccountId = 0;
+                while (!int.TryParse(Console.ReadLine(), out receiverAccountId) || receiverAccountId == senderAccountId) {
+                    Console.Clear();
+                    Console.WriteLine("Invalid input. Please enter a valid account ID!");
+                    Console.Write("Request From Account ID: ");
+                }
+
+                Console.Write("Why are you requesting this amount?: ");
+                string? title = Console.ReadLine();
+
+                Console.Write("Amount you are requesting: ");
+                int amount = 0;
+                while (!int.TryParse(Console.ReadLine(), out amount)) {
+                    Console.Clear();
+                    Console.WriteLine("Invalid input. Please enter a valid amount!");
+                    Console.Write("Amount you are requesting: ");
+                }
+
+                Console.Write("Due to in? (days): ");
+                int due = 0;
+                while (!int.TryParse(Console.ReadLine(), out due)) {
+                    Console.Clear();
+                    Console.WriteLine("Invalid input. Please enter a valid due time!");
+                    Console.Write("Due to in? (days): ");
+                }
+
+                Console.WriteLine($"Are you sure that you want to send an invoice for {amount:C} to {bank.GetAccountById(receiverAccountId).GetUserName()}'s account? (yes/no)");
+                string? sure = Console.ReadLine();
+                if (sure?.ToLower() != "yes") {
+                    Console.Clear();
+                    Console.WriteLine("Transfer terminated.");
+                    return false;
+                }
+                Console.Write("Confirmation Password: ");
+                string? confirmationPassword = Console.ReadLine();
+
+                Console.Clear();
+
+                bool transferSuccess = true;
+
+                User receiverAccount = bank.GetAccountById(receiverAccountId);
+
+                // Validate sender and receiver accounts
+                if (user == null || receiverAccount == null) {
+                    Console.WriteLine("Invalid account ID.");
+                    Console.ReadKey();
+                    transferSuccess = false;
+                }
+
+                // Validate confirmation password
+                if (!user.CheckPassword(confirmationPassword)) {
+                    Console.WriteLine("Invalid confirmation password.");
+                    Console.ReadKey();
+                    transferSuccess = false;
+                }
+
+                if (transferSuccess) {
+                    Console.WriteLine("Invoice sent successfully.");
+                    bank.CreateAndSendInvoice(receiverAccount.GetInvoices().Count + 1, receiverAccountId, title, amount, DateTime.Today.AddDays(due), false); // Create an invoice
+                    bank.CreateAndSendInvoice(user.GetInvoices().Count + 1, senderAccountId, title + " [sended]", amount, DateTime.Today.AddDays(due), false); // Create an invoice
+                    Console.ReadKey();
+                    backToMainMenu = true;
+                } else {
+                    Console.WriteLine("Sending the invoice failed.");
+
+                    Console.WriteLine("Do you want to try again? (yes/no)");
+                    string? tryAgainResponse = Console.ReadLine();
+                    if (tryAgainResponse?.ToLower() == "yes") {
+                        Console.Clear();
+                        return false;
+                    } else {
+                        backToMainMenu = true;
+                    }
+                }
+            }
+            return true;
         }
     }
 }

@@ -48,4 +48,17 @@ class Bank {
         }
         return false;
     }
+
+    public void CreateAndSendInvoice(int id, int userId, string description, int amount, DateTime dueDate, bool isPaid) {
+        Invoice invoice;
+        if (isPaid) {
+            DateTime paymentDate = DateTime.Now;
+            invoice = new PaidInvoice(id, userId, description, amount, dueDate, paymentDate);
+        } else {
+            invoice = new UnpaidInvoice(id, userId, description, amount, dueDate);
+        }
+
+        // Send invoice to user
+        GetAccountById(id).ReceiveInvoice(invoice);
+    }
 }

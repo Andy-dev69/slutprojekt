@@ -6,6 +6,7 @@ class User : Bank
     private string Username { get; set; }
     private string Password { get; set; }
     private int Balance { get; set; }
+    private List<Invoice> invoices { get; set; }
     public User(int Id, string BankName, int UserId, string Name, string Username, string Password, bool IsAdmin) : base(Id, BankName) {
         this.UserId = UserId;
         this.Name = Name;
@@ -13,6 +14,7 @@ class User : Bank
         this.Password = Password;
         this.IsAdmin = IsAdmin;
         Balance = 1000;
+        invoices = new List<Invoice>();
         Console.Clear();
         Console.WriteLine("New bank account created!");
     }
@@ -55,5 +57,22 @@ class User : Bank
 
     public bool ValidateCredentials(string username, string password) {
         return Username == username && Password == password;
+    }
+
+    public List<Invoice> GetInvoices() {
+        return invoices;
+    }
+
+    public string GetInvoicesNumber() {
+        if (invoices.Count == 0) {
+            return "";
+        }
+        return $"[{invoices.Count}]";
+    }
+
+    public void ReceiveInvoice(Invoice invoice) {
+        invoices.Add(invoice);
+        Console.WriteLine("Received Invoice:");
+        invoice.PrintInvoice();
     }
 }
