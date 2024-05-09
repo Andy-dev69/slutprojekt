@@ -15,7 +15,7 @@ namespace MyApp
             Console.WriteLine("Press any key to continue.");
             Console.ReadKey();
             Bank bank = new Bank(1, "SEB");
-            bank.AddUser(new User(1, bank.GetBankName(), 0, "Guest", "none", "none", false));
+            bank.AddUser(new User(1, bank.GetBankName(), 0, "Admin", "admin", "admin", true));
             bank.AddUser(new User(1, bank.GetBankName(), 1, "Marrio", "marrio", "test123", false));
             bank.AddUser(new User(1, bank.GetBankName(), 2, "Andrei", "andrei", "test123", false));
             GuestMenu(bank);
@@ -172,133 +172,355 @@ namespace MyApp
                 Console.WriteLine($"  3. Check Invoices {user.GetInvoicesNumber()}            ");
                 Console.WriteLine("  4. Account Details            ");
                 Console.WriteLine("  5. Switch Account             ");
+                if (user.IsUserAdmin()) {
+                    Console.WriteLine("  6. Admin menu             ");
+                    Console.WriteLine("                                ");
+                    Console.WriteLine("  7. Exit                       ");
+                    Console.WriteLine("└──────────────────────────────┘");
+                } else {
+                    Console.WriteLine("                                ");
+                    Console.WriteLine("  6. Exit                       ");
+                    Console.WriteLine("└──────────────────────────────┘");
+                }
+                Console.Write("Input: ");
+
+                ConsoleKeyInfo key = Console.ReadKey();
+                if (user.IsUserAdmin()) {
+                    switch (key.Key)
+                    {
+                        case ConsoleKey.D1:
+                            Console.Clear();
+                            stop = Transfer(bank, user);
+                            Console.Clear();
+                            if (stop) {
+                                MainMenu(bank);
+                            }
+                            break;
+                        case ConsoleKey.D2:
+                            Console.Clear();
+                            stop = Request(bank, user);
+                            Console.Clear();
+                            if (stop) {
+                                MainMenu(bank);
+                            }
+                            break;
+                        case ConsoleKey.D3:
+                            Console.Clear();
+                            if (user.GetInvoices().Count != 0) {
+                                stop = true;
+                                foreach (var invoice in user.GetInvoices()) {
+                                    if (!invoice.IsPayed) {
+                                        Console.WriteLine($"[{invoice.Id}] {invoice.Description} - Paid: {invoice.IsPayed}\nDue Date: {invoice.DueDate:d}");
+                                    } else {
+                                        Console.WriteLine($"[{invoice.Id}] {invoice.Description} - Paid: {invoice.IsPayed}");
+                                    }
+                                }
+
+                                Console.Write("Enter the ID of the invoice you want to interact with (or '0' to go back): ");
+                                int invoiceId = 0;
+                                while (!int.TryParse(Console.ReadLine(), out invoiceId) || invoiceId < 0) {
+                                    Console.WriteLine("Invalid input. Please enter a valid invoice ID (or '0' to go back): ");
+                                }
+                                if (invoiceId == 0) {
+                                    Console.Clear();
+                                    stop = false;
+                                } else {
+                                    Invoice? selectedInvoice = user.GetInvoices().FirstOrDefault(i => i.Id == invoiceId);
+                                    if (selectedInvoice != null) {
+                                        // Invoice found
+                                        if (!selectedInvoice.IsPayed) {
+                                            if (!selectedInvoice.Description.Contains("[sent]")) {
+                                                Console.WriteLine($"Invoice ID: {selectedInvoice.Id}");
+                                                Console.WriteLine($"From: {bank.GetAccountById(selectedInvoice.InvoiceSenderID).GetUserName()}");
+                                                Console.WriteLine($"Description: {selectedInvoice.Description}");
+                                                Console.WriteLine($"Amount: {selectedInvoice.Amount:C}");
+                                                Console.WriteLine($"Due Date: {selectedInvoice.DueDate:d}");
+                                                Console.Write("Do you want to pay this invoice? (yes/no): ");
+                                                string? input = Console.ReadLine();
+                                                if (input?.ToLower() == "yes") {
+                                                    // Pay the invoice
+                                                    MoneyTransfer moneyTransfer = new MoneyTransfer(bank);
+                                                    bool transferSuccess = moneyTransfer.TransferMoney(user.GetUserId(), selectedInvoice.InvoiceSenderID, selectedInvoice.Amount, "DSAUDJSAA");
+                                                    if (transferSuccess) {
+                                                        selectedInvoice.SetPaidStatus(true);
+                                                        foreach (var invoice in bank.GetAccountById(selectedInvoice.InvoiceSenderID).GetInvoices()) {
+                                                            if (invoice.InvoiceSenderID == user.GetUserId() && !invoice.IsPayed && invoice.Id == invoiceId) {
+                                                                invoice.SetPaidStatus(true);
+                                                            }
+                                                        }
+                                                        Console.WriteLine("Invoice paid successfully.");
+                                                        Console.WriteLine($"New balance: {user.GetAccountBalance()}");
+                                                        Console.ReadKey();
+                                                        Console.Clear();
+                                                        stop = false;
+                                                    } else {
+                                                        Console.Clear();
+                                                        Console.WriteLine("Transfer failed. Insufficient funds.");
+                                                        stop = false;
+                                                    }
+                                                } else {
+                                                    Console.Clear();
+                                                    stop = false;
+                                                }
+                                            } else {
+                                                Console.Clear();
+                                                Console.WriteLine("You can't pay your own invoice.");
+                                                stop = false;
+                                            }
+                                        } else {
+                                            Console.Clear();
+                                            Console.WriteLine("This invoice has already been paid.");
+                                            stop = false;
+                                        }
+                                    } else {
+                                        Console.Clear();
+                                        Console.WriteLine("Invoice not found.");
+                                        stop = false;
+                                    }
+                                }
+                            } else {
+                                Console.Clear();
+                                Console.WriteLine("You have no invoices!");   
+                            }   
+                            break;
+                        case ConsoleKey.D4:
+                            Console.Clear();
+                            user.printUserDetails();
+                            Console.Write("Press any key to go back!");
+                            Console.ReadKey();
+                            Console.Clear();
+                            break;
+                        case ConsoleKey.D5:
+                            stop = true;
+                            Console.Clear();
+                            GuestMenu(bank);
+                            break;
+                        case ConsoleKey.D6:
+                            stop = true;
+                            Console.Clear();
+                            AdminMenu(bank);
+                            break;
+                        case ConsoleKey.D7:
+                            stop = true;
+                            Console.Clear();
+                            Console.WriteLine("┌────────────────────┐");
+                            Console.WriteLine("  System Terminated!  ");
+                            Console.WriteLine("└────────────────────┘");
+                            break;
+                        default:
+                            Console.Clear();
+                            break;
+                    }
+                } else {
+                    switch (key.Key)
+                    {
+                        case ConsoleKey.D1:
+                            Console.Clear();
+                            stop = Transfer(bank, user);
+                            Console.Clear();
+                            if (stop) {
+                                MainMenu(bank);
+                            }
+                            break;
+                        case ConsoleKey.D2:
+                            Console.Clear();
+                            stop = Request(bank, user);
+                            Console.Clear();
+                            if (stop) {
+                                MainMenu(bank);
+                            }
+                            break;
+                        case ConsoleKey.D3:
+                            Console.Clear();
+                            if (user.GetInvoices().Count != 0) {
+                                stop = true;
+                                foreach (var invoice in user.GetInvoices()) {
+                                    if (!invoice.IsPayed) {
+                                        Console.WriteLine($"[{invoice.Id}] {invoice.Description} - Paid: {invoice.IsPayed}\nDue Date: {invoice.DueDate:d}");
+                                    } else {
+                                        Console.WriteLine($"[{invoice.Id}] {invoice.Description} - Paid: {invoice.IsPayed}");
+                                    }
+                                }
+
+                                Console.Write("Enter the ID of the invoice you want to interact with (or '0' to go back): ");
+                                int invoiceId = 0;
+                                while (!int.TryParse(Console.ReadLine(), out invoiceId) || invoiceId < 0) {
+                                    Console.WriteLine("Invalid input. Please enter a valid invoice ID (or '0' to go back): ");
+                                }
+                                if (invoiceId == 0) {
+                                    Console.Clear();
+                                    stop = false;
+                                } else {
+                                    Invoice? selectedInvoice = user.GetInvoices().FirstOrDefault(i => i.Id == invoiceId);
+                                    if (selectedInvoice != null) {
+                                        // Invoice found
+                                        if (!selectedInvoice.IsPayed) {
+                                            if (!selectedInvoice.Description.Contains("[sent]")) {
+                                                Console.WriteLine($"Invoice ID: {selectedInvoice.Id}");
+                                                Console.WriteLine($"From: {bank.GetAccountById(selectedInvoice.InvoiceSenderID).GetUserName()}");
+                                                Console.WriteLine($"Description: {selectedInvoice.Description}");
+                                                Console.WriteLine($"Amount: {selectedInvoice.Amount:C}");
+                                                Console.WriteLine($"Due Date: {selectedInvoice.DueDate:d}");
+                                                Console.Write("Do you want to pay this invoice? (yes/no): ");
+                                                string? input = Console.ReadLine();
+                                                if (input?.ToLower() == "yes") {
+                                                    // Pay the invoice
+                                                    MoneyTransfer moneyTransfer = new MoneyTransfer(bank);
+                                                    bool transferSuccess = moneyTransfer.TransferMoney(user.GetUserId(), selectedInvoice.InvoiceSenderID, selectedInvoice.Amount, "DSAUDJSAA");
+                                                    if (transferSuccess) {
+                                                        selectedInvoice.SetPaidStatus(true);
+                                                        foreach (var invoice in bank.GetAccountById(selectedInvoice.InvoiceSenderID).GetInvoices()) {
+                                                            if (invoice.InvoiceSenderID == user.GetUserId() && !invoice.IsPayed && invoice.Id == invoiceId) {
+                                                                invoice.SetPaidStatus(true);
+                                                            }
+                                                        }
+                                                        Console.WriteLine("Invoice paid successfully.");
+                                                        Console.WriteLine($"New balance: {user.GetAccountBalance()}");
+                                                        Console.ReadKey();
+                                                        Console.Clear();
+                                                        stop = false;
+                                                    } else {
+                                                        Console.Clear();
+                                                        Console.WriteLine("Transfer failed. Insufficient funds.");
+                                                        stop = false;
+                                                    }
+                                                } else {
+                                                    Console.Clear();
+                                                    stop = false;
+                                                }
+                                            } else {
+                                                Console.Clear();
+                                                Console.WriteLine("You can't pay your own invoice.");
+                                                stop = false;
+                                            }
+                                        } else {
+                                            Console.Clear();
+                                            Console.WriteLine("This invoice has already been paid.");
+                                            stop = false;
+                                        }
+                                    } else {
+                                        Console.Clear();
+                                        Console.WriteLine("Invoice not found.");
+                                        stop = false;
+                                    }
+                                }
+                            } else {
+                                Console.Clear();
+                                Console.WriteLine("You have no invoices!");   
+                            }   
+                            break;
+                        case ConsoleKey.D4:
+                            Console.Clear();
+                            user.printUserDetails();
+                            Console.Write("Press any key to go back!");
+                            Console.ReadKey();
+                            Console.Clear();
+                            break;
+                        case ConsoleKey.D5:
+                            stop = true;
+                            Console.Clear();
+                            GuestMenu(bank);
+                            break;
+                        case ConsoleKey.D6:
+                            stop = true;
+                            Console.Clear();
+                            Console.WriteLine("┌────────────────────┐");
+                            Console.WriteLine("  System Terminated!  ");
+                            Console.WriteLine("└────────────────────┘");
+                            break;
+                        default:
+                            Console.Clear();
+                            break;
+                    }
+                }
+            }
+        }
+
+        static void AdminMenu(Bank bank)
+        {
+            Console.Clear();
+            bool stop = false;
+            while (!stop)
+            {
+                User user = bank.GetLoggedInUser();
+                Console.WriteLine($"Logged in as: {user.GetUsername()}");
+                Console.WriteLine("┌──────────── MENU ────────────┐");
+                Console.WriteLine("  1. Add Money To Account       ");
+                Console.WriteLine("  2. Remove Money From Account  ");
+                Console.WriteLine("  3. Manage Invoices            ");
+                Console.WriteLine("  4. Manage Accounts            ");
                 Console.WriteLine("                                ");
+                Console.WriteLine("  5. Back                       ");
                 Console.WriteLine("  6. Exit                       ");
                 Console.WriteLine("└──────────────────────────────┘");
                 Console.Write("Input: ");
 
                 ConsoleKeyInfo key = Console.ReadKey();
-
-                switch (key.Key)
-                {
-                    case ConsoleKey.D1:
-                        Console.Clear();
-                        stop = Transfer(bank, user);
-                        Console.Clear();
-                        if (stop) {
-                            MainMenu(bank);
-                        }
-                        break;
-                    case ConsoleKey.D2:
-                        Console.Clear();
-                        stop = Request(bank, user);
-                        Console.Clear();
-                        if (stop) {
-                            MainMenu(bank);
-                        }
-                        break;
-                    case ConsoleKey.D3:
-                        Console.Clear();
-                        if (user.GetInvoices().Count != 0) {
-                            stop = true;
-                            foreach (var invoice in user.GetInvoices()) {
-                                if (!invoice.IsPayed) {
-                                    Console.WriteLine($"[{invoice.Id}] {invoice.Description} - Paid: {invoice.IsPayed}\nDue Date: {invoice.DueDate:d}");
-                                } else {
-                                    Console.WriteLine($"[{invoice.Id}] {invoice.Description} - Paid: {invoice.IsPayed}");
-                                }
-                            }
-
-                            Console.Write("Enter the ID of the invoice you want to interact with (or '0' to go back): ");
-                            int invoiceId = 0;
-                            while (!int.TryParse(Console.ReadLine(), out invoiceId) || invoiceId < 0) {
-                                Console.WriteLine("Invalid input. Please enter a valid invoice ID (or '0' to go back): ");
-                            }
-                            if (invoiceId == 0) {
-                                Console.Clear();
-                                stop = false;
-                            } else {
-                                Invoice? selectedInvoice = user.GetInvoices().FirstOrDefault(i => i.Id == invoiceId);
-                                if (selectedInvoice != null) {
-                                    // Invoice found
-                                    if (!selectedInvoice.IsPayed) {
-                                        if (!selectedInvoice.Description.Contains("[sent]")) {
-                                            Console.WriteLine($"Invoice ID: {selectedInvoice.Id}");
-                                            Console.WriteLine($"From: {bank.GetAccountById(selectedInvoice.InvoiceSenderID).GetUserName()}");
-                                            Console.WriteLine($"Description: {selectedInvoice.Description}");
-                                            Console.WriteLine($"Amount: {selectedInvoice.Amount:C}");
-                                            Console.WriteLine($"Due Date: {selectedInvoice.DueDate:d}");
-                                            Console.Write("Do you want to pay this invoice? (yes/no): ");
-                                            string? input = Console.ReadLine();
-                                            if (input?.ToLower() == "yes") {
-                                                // Pay the invoice
-                                                MoneyTransfer moneyTransfer = new MoneyTransfer(bank);
-                                                bool transferSuccess = moneyTransfer.TransferMoney(user.GetUserId(), selectedInvoice.InvoiceSenderID, selectedInvoice.Amount, "DSAUDJSAA");
-                                                if (transferSuccess) {
-                                                    selectedInvoice.SetPaidStatus(true);
-                                                    foreach (var invoice in bank.GetAccountById(selectedInvoice.InvoiceSenderID).GetInvoices()) {
-                                                        if (invoice.InvoiceSenderID == user.GetUserId() && !invoice.IsPayed && invoice.Id == invoiceId) {
-                                                            invoice.SetPaidStatus(true);
-                                                        }
-                                                    }
-                                                    Console.WriteLine("Invoice paid successfully.");
-                                                    Console.WriteLine($"New balance: {user.GetAccountBalance()}");
-                                                    Console.ReadKey();
-                                                    Console.Clear();
-                                                    stop = false;
-                                                } else {
-                                                    Console.Clear();
-                                                    Console.WriteLine("Transfer failed. Insufficient funds.");
-                                                    stop = false;
-                                                }
-                                            } else {
-                                                Console.Clear();
-                                                stop = false;
-                                            }
-                                        } else {
-                                            Console.Clear();
-                                            Console.WriteLine("You can't pay your own invoice.");
-                                            stop = false;
-                                        }
-                                    } else {
-                                        Console.Clear();
-                                        Console.WriteLine("This invoice has already been paid.");
-                                        stop = false;
-                                    }
-                                } else {
-                                    Console.Clear();
-                                    Console.WriteLine("Invoice not found.");
-                                    stop = false;
-                                }
-                            }
-                        } else {
+                    switch (key.Key)
+                    {
+                        case ConsoleKey.D1:
                             Console.Clear();
-                            Console.WriteLine("You have no invoices!");   
-                        }   
-                        break;
-                    case ConsoleKey.D4:
-                        Console.Clear();
-                        user.printUserDetails();
-                        Console.Write("Press any key to go back!");
-                        Console.ReadKey();
-                        Console.Clear();
-                        break;
-                    case ConsoleKey.D5:
-                        stop = true;
-                        Console.Clear();
-                        GuestMenu(bank);
-                        break;
-                    case ConsoleKey.D6:
-                        stop = true;
-                        Console.Clear();
-                        Console.WriteLine("┌────────────────────┐");
-                        Console.WriteLine("  System Terminated!  ");
-                        Console.WriteLine("└────────────────────┘");
-                        break;
-                    default:
-                        Console.Clear();
-                        break;
-                }
+                            Console.WriteLine("Enter transfer details:");
+                            Console.Write("Account ID: ");
+                            int accountId = 0;
+                            while (!int.TryParse(Console.ReadLine(), out accountId) || bank.GetAccountById(accountId) == null) {
+                                Console.WriteLine("Invalid input. Please enter a valid account ID:");
+                                Console.Write("Account ID: ");
+                            }
+                            Console.Write("Amount: ");
+                            int amount;
+                            while (!int.TryParse(Console.ReadLine(), out amount) || amount <= 0) {
+                                Console.WriteLine("Invalid input. Please enter a valid amount to add:");
+                                Console.Write("Amount: ");
+                            }
+                            bank.GetAccountById(accountId).Deposit(amount);
+                            Console.WriteLine($"You added {amount:C} into {bank.GetAccountById(accountId).GetUserName()}'s account!");
+                            Console.ReadKey();
+                            break;
+                        case ConsoleKey.D2:
+                            Console.Clear();
+                            Console.WriteLine("Enter transfer details:");
+                            Console.Write("Account ID: ");
+                            int accountId2 = 0;
+                            while (!int.TryParse(Console.ReadLine(), out accountId2) || bank.GetAccountById(accountId2) == null) {
+                                Console.WriteLine("Invalid input. Please enter a valid account ID:");
+                                Console.Write("Account ID: ");
+                            }
+                            Console.Write("Amount: ");
+                            int amount2 = 0;
+                            while (!int.TryParse(Console.ReadLine(), out amount2) || amount2 <= 0 || bank.GetAccountById(accountId2).GetNormalAccountBalance() < amount2) {
+                                Console.WriteLine("Invalid input. Please enter a valid amount to remove:");
+                                Console.WriteLine($"Account balance: {bank.GetAccountById(accountId2).GetAccountBalance()}");
+                                Console.Write("Amount: ");
+                            }
+                            bank.GetAccountById(accountId2).Withdraw(amount2);
+                            Console.WriteLine($"You have removed {amount2:C} from {bank.GetAccountById(accountId2).GetUserName()}'s account!");
+                            Console.ReadKey();
+                            break;
+                        case ConsoleKey.D3:
+                            Console.Clear();
+                            stop = true;
+                            break;
+                        case ConsoleKey.D4:
+                            Console.Clear();
+                            stop = true;
+                            break;
+                        case ConsoleKey.D5:
+                            stop = true;
+                            Console.Clear();
+                            MainMenu(bank);
+                            break;
+                        case ConsoleKey.D6:
+                            stop = true;
+                            Console.Clear();
+                            Console.WriteLine("┌────────────────────┐");
+                            Console.WriteLine("  System Terminated!  ");
+                            Console.WriteLine("└────────────────────┘");
+                            break;
+                        default:
+                            Console.Clear();
+                            break;
+                    }
             }
         }
 
