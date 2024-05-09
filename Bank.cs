@@ -7,7 +7,7 @@ class Bank {
     public Bank(int Id, string Name) {
         this.Id = Id;
         this.Name = Name;
-        this.users = new List<User>(); // Initialize the list of users
+        users = new List<User>(); // Initialize the list of users
     }
 
     public string GetBankName() {
@@ -27,6 +27,9 @@ class Bank {
     }
 
     public User GetLoggedInUser() {
+        if (loggedInUser == null) {
+            throw new InvalidOperationException("No user is currently logged in.");
+        }
         return loggedInUser;
     }
 
@@ -36,7 +39,7 @@ class Bank {
                 return user;
             }
         }
-        return null;
+        throw new KeyNotFoundException($"User with ID {id} not found.");
     }
 
     public bool CheckLogin(string username, string password) {
@@ -47,6 +50,10 @@ class Bank {
             }
         }
         return false;
+    }
+
+    public List<User> GetUserAccounts() {
+        return users;
     }
 
     public void CreateAndSendInvoice(int id, int userId, int invoiceSenderID, string description, int amount, DateTime dueDate, bool isPaid) {

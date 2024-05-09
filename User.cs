@@ -48,11 +48,11 @@ class User : Bank
     }
 
     public void Withdraw(int amount) {
-        Balance = Balance - amount;
+        Balance -= amount;
     }
 
     public void Deposit(int amount) {
-        Balance = Balance + amount;
+        Balance += amount;
     }
 
     public bool ValidateCredentials(string username, string password) {
@@ -78,9 +78,17 @@ class User : Bank
         Console.WriteLine($"Administrator: {IsAdmin}\n");
     }
 
+    public void RemoveInvoice(Invoice invoice) {
+        invoices.Remove(invoice);
+    }
+
     public void ReceiveInvoice(Invoice invoice) {
         invoices.Add(invoice);
         Console.WriteLine("Received Invoice:");
         invoice.PrintInvoice();
+    }
+
+    public void SetUserAdmin() {
+        IsAdmin = !IsAdmin;
     }
 }
