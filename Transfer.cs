@@ -5,6 +5,7 @@ class MoneyTransfer {
         this.bank = bank;
     }
 
+    // Method to transfer money between user acounts
     public bool TransferMoney(int senderAccountId, int receiverAccountId, int amount, string confirmationPassword) {
         // Find sender and receiver accounts
         User senderAccount = bank.GetAccountById(senderAccountId);
@@ -23,7 +24,7 @@ class MoneyTransfer {
                 return false;
             }
         }
-        
+
         // Check if sender account has sufficient balance
         if (senderAccount.GetNormalAccountBalance() < amount) {
             Console.WriteLine("Insufficient balance.");

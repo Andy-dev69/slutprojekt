@@ -16,13 +16,17 @@ namespace MyApp
             Console.WriteLine("└──────────────────────────────┘");
             Console.WriteLine("Press any key to continue.");
             Console.ReadKey();
+            // Creating the bank instance and default users.
             Bank bank = new Bank(1, "SEB");
             bank.AddUser(new User(1, bank.GetBankName(), 0, "Admin", "admin", "admin", true));
-            bank.AddUser(new User(1, bank.GetBankName(), 1, "Marrio", "marrio", "test123", false));
+            bank.AddUser(new User(1, bank.GetBankName(), 1, "Marrio", "andy1378", "test123", false));
             bank.AddUser(new User(1, bank.GetBankName(), 2, "Andrei", "andrei", "test123", false));
             GuestMenu(bank);
         }
-
+        /// <summary>
+        /// Guest menu with limited access! (Login, Create account, Exit)
+        /// </summary>
+        /// <param name="bank"></param>
         static void GuestMenu(Bank bank)
         {
             Console.Clear();
@@ -158,7 +162,10 @@ namespace MyApp
                 }
             }
         }
-
+        /// <summary>
+        /// Main menu with all the options depending on if you have admin access or not.
+        /// </summary>
+        /// <param name="bank"></param>
         static void MainMenu(Bank bank)
         {
             Console.Clear();
@@ -174,6 +181,7 @@ namespace MyApp
                 Console.WriteLine($"  3. Check Invoices {user.GetInvoicesNumber()}            ");
                 Console.WriteLine("  4. Account Details            ");
                 Console.WriteLine("  5. Switch Account             ");
+                // Checks admin permission
                 if (user.IsUserAdmin()) {
                     Console.WriteLine("  6. Admin menu             ");
                     Console.WriteLine("                                ");
@@ -187,6 +195,7 @@ namespace MyApp
                 Console.Write("Input: ");
 
                 ConsoleKeyInfo key = Console.ReadKey();
+                // Checks admin permission
                 if (user.IsUserAdmin()) {
                     switch (key.Key)
                     {
@@ -287,7 +296,10 @@ namespace MyApp
                 }
             }
         }
-
+        /// <summary>
+        /// Admin menu 
+        /// </summary>
+        /// <param name="bank"></param>
         static void AdminMenu(Bank bank)
         {
             Console.Clear();
@@ -315,16 +327,19 @@ namespace MyApp
                             Console.WriteLine("Enter transfer details:");
                             Console.Write("Account ID: ");
                             int accountId = 0;
+                            // Check the input is correct.
                             while (!int.TryParse(Console.ReadLine(), out accountId) || bank.GetAccountById(accountId) == null) {
                                 Console.WriteLine("Invalid input. Please enter a valid account ID:");
                                 Console.Write("Account ID: ");
                             }
                             Console.Write("Amount: ");
                             int amount;
+                            // Check the input is correct.
                             while (!int.TryParse(Console.ReadLine(), out amount) || amount <= 0) {
                                 Console.WriteLine("Invalid input. Please enter a valid amount to add:");
                                 Console.Write("Amount: ");
                             }
+                            // Performs the action.
                             bank.GetAccountById(accountId).Deposit(amount);
                             Console.WriteLine($"You added {amount:C} into {bank.GetAccountById(accountId).GetUserName()}'s account!");
                             Console.ReadKey();
@@ -334,17 +349,20 @@ namespace MyApp
                             Console.WriteLine("Enter transfer details:");
                             Console.Write("Account ID: ");
                             int accountId2 = 0;
+                            // Check the input is correct.
                             while (!int.TryParse(Console.ReadLine(), out accountId2) || bank.GetAccountById(accountId2) == null) {
                                 Console.WriteLine("Invalid input. Please enter a valid account ID:");
                                 Console.Write("Account ID: ");
                             }
                             Console.Write("Amount: ");
                             int amount2 = 0;
+                            // Check the input is correct.
                             while (!int.TryParse(Console.ReadLine(), out amount2) || amount2 <= 0 || bank.GetAccountById(accountId2).GetNormalAccountBalance() < amount2) {
                                 Console.WriteLine("Invalid input. Please enter a valid amount to remove:");
                                 Console.WriteLine($"Account balance: {bank.GetAccountById(accountId2).GetAccountBalance()}");
                                 Console.Write("Amount: ");
                             }
+                            // Performs the action.
                             bank.GetAccountById(accountId2).Withdraw(amount2);
                             Console.WriteLine($"You have removed {amount2:C} from {bank.GetAccountById(accountId2).GetUserName()}'s account!");
                             Console.ReadKey();
@@ -356,7 +374,7 @@ namespace MyApp
                             break;
                         case ConsoleKey.D4:
                             Console.Clear();
-                            ManageAccounts(bank, user);
+                            ManageAccounts(bank);
                             break;
                         case ConsoleKey.D5:
                             stop = true;
@@ -376,7 +394,10 @@ namespace MyApp
                     }
             }
         }
-
+        /// <summary>
+        /// Invoice Menu where you can add / remove an invoice from a user.
+        /// </summary>
+        /// <param name="bank"></param>
         static void InvoiceMenu(Bank bank)
         {
             Console.Clear();
@@ -572,7 +593,12 @@ namespace MyApp
                     }
             }
         }
-
+        /// <summary>
+        /// Transfer Option witch transfers money between diffrent accounts
+        /// </summary>
+        /// <param name="bank"></param>
+        /// <param name="user"></param>
+        /// <returns></returns>
         static bool Transfer(Bank bank, User user) {
             // Create a money transfer instance
             MoneyTransfer moneyTransfer = new MoneyTransfer(bank);
@@ -634,7 +660,12 @@ namespace MyApp
             }
             return true;
         }
-        
+        /// <summary>
+        /// Request Option witch sends an invoice to the requested user.
+        /// </summary>
+        /// <param name="bank"></param>
+        /// <param name="user"></param>
+        /// <returns></returns>
         static bool Request(Bank bank, User user) {
             bool backToMainMenu = false;
             while (!backToMainMenu) {
@@ -728,7 +759,11 @@ namespace MyApp
             }
             return true;
         }
-
+        /// <summary>
+        /// Check invoices option that displays all the account invoices and lets you pay them.
+        /// </summary>
+        /// <param name="bank"></param>
+        /// <param name="user"></param>
         static void CheckInvoices(Bank bank, User user) {
             if (user.GetInvoices().Count != 0) {
                 foreach (var invoice in user.GetInvoices()) {
@@ -799,12 +834,16 @@ namespace MyApp
                 Console.WriteLine("You have no invoices!");   
             }   
         }
-    
-        static void ManageAccounts(Bank bank, User user) {
+        /// <summary>
+        /// Manage accounts option that displays all the accounts and lets you sort them by your liking but also change the permissions.
+        /// </summary>
+        /// <param name="bank"></param>
+        static void ManageAccounts(Bank bank) {
             Console.Write("Do you want to sort the list by admin, ids or name? ");
             string? answer = Console.ReadLine();
             Console.Clear();
             Console.WriteLine("List of User Accounts:");
+            // Sorting the accounts by the answer
             if (answer == "admin") {
                 var sortedAccounts = bank.GetUserAccounts().OrderByDescending(u => u.IsUserAdmin());
                 foreach (var usr in sortedAccounts) {
@@ -821,11 +860,12 @@ namespace MyApp
                 }
             }
 
-            Console.Write("Enter the ID of the user you want to modify: ");
+            Console.WriteLine("Enter the ID of the user you want to modify: ");
+            Console.Write("Input: ");
             int userId;
             while (!int.TryParse(Console.ReadLine(), out userId)) {
                 Console.WriteLine("Invalid input. Please enter a valid user ID:");
-                Console.Write("Enter the ID of the user you want to modify: ");
+                Console.Write("Input: ");
             }
 
             User? selectedUser = bank.GetUserAccounts().FirstOrDefault(u => u.GetUserId() == userId);

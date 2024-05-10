@@ -1,4 +1,6 @@
+// Basic invoice
 class Invoice {
+    // Properties
     public int Id { get; set; }
     public int UserId { get; set; }
     public int InvoiceSenderID { get; set; }
@@ -8,6 +10,7 @@ class Invoice {
     public bool IsPayed { get; set; }
 
     public Invoice(int id, int userId, int invoiceSenderID, string description, int amount, DateTime dueDate, bool isPayed) {
+        // Initialize properties
         Id = id;
         UserId = userId;
         InvoiceSenderID = invoiceSenderID;
@@ -17,10 +20,13 @@ class Invoice {
         IsPayed = isPayed;
     }
 
+    // Method to set the paid status of the invoice
     public void SetPaidStatus(bool isPayed) {
         IsPayed = isPayed;
     }
 
+    // Virtual method to print the details of the invoice
+    // Using the virtual attribute so that it can be overided and display diffrent information in case the invoice is not payed!
     public virtual void PrintInvoice() {
         Console.WriteLine($"Invoice ID: {Id}");
         Console.WriteLine($"Account ID: {UserId}");
