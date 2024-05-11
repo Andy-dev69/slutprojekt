@@ -48,8 +48,7 @@ class Bank {
                 return user;
             }
         }
-        // Throw an exception if the user ID is not found
-        throw new KeyNotFoundException($"User with ID {id} not found.");
+        return null;
     }
 
     // Method to check login credentials and set the logged in user
