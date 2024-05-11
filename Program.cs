@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading.Tasks.Dataflow;
 
-namespace MyApp
+namespace slutprojekt
 {
     internal class Program
     {
