@@ -675,7 +675,7 @@ namespace slutprojekt
 
                 Console.Write("Request To Account ID: ");
                 int receiverAccountId = 0;
-                while (!int.TryParse(Console.ReadLine(), out receiverAccountId) || receiverAccountId == senderAccountId) {
+                while (!int.TryParse(Console.ReadLine(), out receiverAccountId) || receiverAccountId == senderAccountId || bank.GetAccountById(receiverAccountId) == null) {
                     Console.Clear();
                     Console.WriteLine("Invalid input. Please enter a valid account ID!");
                     Console.Write("Request To Account ID: ");
