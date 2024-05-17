@@ -20,14 +20,17 @@ class Menu
             Console.Write("Input: ");
 
             ConsoleKeyInfo key = Console.ReadKey();
+
             switch (key.Key) {
-                case ConsoleKeyInfo.D1:
+                case ConsoleKey.D1:
+                    exit = true;
                     HandleLogin();
                     break;
-                case ConsoleKeyInfo.D2:
-                    HandleAccountCreation();
+                case ConsoleKey.D2:
+                    exit = true;
+                    HandleCreateAccount();
                     break;
-                case ConsoleKeyInfo.D3:
+                case ConsoleKey.D3:
                     exit = true;
                     DisplayTerminationMessage();
                     break;
@@ -68,27 +71,27 @@ class Menu
             // Switch case som kollar vilken tangent du klickar
             // Special då den kollar även ifall du är admin eller inte.
             switch (key.Key) {
-                case ConsoleKeyInfo.D1:
+                case ConsoleKey.D1:
                     HandleTransfer(user);
                     break;
-                case ConsoleKeyInfo.D2:
+                case ConsoleKey.D2:
                     HandleRequest(user);
                     break;
-                case ConsoleKeyInfo.D3:
+                case ConsoleKey.D3:
                     CheckInvoices(user);
                     break;
-                case ConsoleKeyInfo.D4:
+                case ConsoleKey.D4:
                     DisplayAccountDetails(user);
                     break;
-                case ConsoleKeyInfo.D5:
+                case ConsoleKey.D5:
                     exit = true;
                     DisplayGuestMenu();
                     break;
-                case ConsoleKeyInfo.D6 when user.IsUserAdmin():
+                case ConsoleKey.D6 when user.IsUserAdmin():
                     DisplayAdminMenu();
                     break;
-                case ConsoleKeyInfo.D6:
-                case ConsoleKeyInfo.D7 when user.IsUserAdmin():
+                case ConsoleKey.D6:
+                case ConsoleKey.D7 when user.IsUserAdmin():
                     exit = true;
                     DisplayTerminationMessage();
                     break;
@@ -110,29 +113,30 @@ class Menu
             Console.WriteLine("  2. Remove Money From Account  ");
             Console.WriteLine("  3. Manage Invoices            ");
             Console.WriteLine("  4. Manage Accounts            ");
+            Console.WriteLine("                                ");
             Console.WriteLine("  5. Back                       ");
             Console.WriteLine("  6. Exit                       ");
             Console.WriteLine("└──────────────────────────────┘");
             Console.Write("Input: ");
             ConsoleKeyInfo key = Console.ReadKey();
             switch (key.Key) {
-                case ConsoleKeyInfo.D1:
+                case ConsoleKey.D1:
                     HandleAddMoney();
                     break;
-                case ConsoleKeyInfo.D2:
+                case ConsoleKey.D2:
                     HandleRemoveMoney();
                     break;
-                case ConsoleKeyInfo.D3:
+                case ConsoleKey.D3:
                     DisplayInvoiceMenu();
                     break;
-                case ConsoleKeyInfo.D4:
+                case ConsoleKey.D4:
                     ManageAccounts();
                     break;
-                case ConsoleKeyInfo.D5:
+                case ConsoleKey.D5:
                     exit = true;
                     ShowMainMenu();
                     break;
-                case ConsoleKeyInfo.D6:
+                case ConsoleKey.D6:
                     exit = true;
                     DisplayTerminationMessage();
                     break;
@@ -192,7 +196,7 @@ class Menu
     
     private void DisplayAccountDetails(User user) {
         Console.Clear();
-        user.PrintUserDetails();
+        user.printUserDetails();
         Console.Write("Press any key to go back!");
         Console.ReadKey();
         Console.Clear();
@@ -203,6 +207,7 @@ class Menu
         Console.WriteLine("┌────────────────────┐");
         Console.WriteLine("  System Terminated!  ");
         Console.WriteLine("└────────────────────┘");
+        Environment.Exit(1);
     }
 
     private void HandleAddMoney() {
@@ -221,5 +226,137 @@ class Menu
         _bank.GetAccountById(accountId).Deposit(amount);
         Console.WriteLine($"You added {amount:C} to { _bank.GetAccountById(accountId).GetUserName() }'s account!");
         Console.ReadKey();
+    }
+
+    private void HandleRemoveMoney() {
+        Console.Clear();
+        Console.WriteLine("Enter transfer details:");
+        int accountId = PromptIntInput("Account ID: ");
+        while (_bank.GetAccountById(accountId) == null) {
+            Console.WriteLine("Invalid account ID.");
+            accountId = PromptIntInput("Account ID: ");
+        }
+        int amount = PromptIntInput("Amount: ");
+        User account = _bank.GetAccountById(accountId);
+        while (amount <= 0 || amount > account.GetNormalAccountBalance()) {
+            Console.WriteLine("Invalid amount.");
+            amount = PromptIntInput("Amount: ");
+        }
+        account.Withdraw(amount);
+        Console.WriteLine($"You removed {amount:C} from { account.GetUserName() }'s account!");
+        Console.ReadKey();
+    }
+
+    private void HandleTransfer(User user) {
+        Console.Clear();
+        Console.WriteLine("Transfer Money:");
+        int recipientId = PromptIntInput("Recipient Account ID: ");
+        while (_bank.GetAccountById(recipientId) == null) {
+            Console.WriteLine("Invalid account ID.");
+            recipientId = PromptIntInput("Recipient Account ID: ");
+        }
+        int amount = PromptIntInput("Amount: ");
+        while (amount <= 0 || amount > user.GetNormalAccountBalance()) {
+            Console.WriteLine("Invalid amount.");
+            amount = PromptIntInput("Amount: ");
+        }
+        user.Withdraw(amount);
+        _bank.GetAccountById(recipientId).Deposit(amount);
+        Console.WriteLine($"You transferred {amount:C} to { _bank.GetAccountById(recipientId).GetUserName() }!");
+        Console.ReadKey();
+    }
+
+    private void HandleRequest(User user) {
+        
+    }
+
+    private void CheckInvoices(User user) {}
+
+    private void DisplayInvoiceMenu() {}
+
+    private void ManageAccounts() {
+        Console.Write("Do you want to sort the list by admin, ids or name? ");
+        string? answer = Console.ReadLine();
+        Console.Clear();
+        Console.WriteLine("List of User Accounts:");
+        // Sorting the accounts by the answer
+        if (answer == "admin") {
+            var sortedAccounts = _bank.GetUserAccounts().OrderByDescending(u => u.IsUserAdmin());
+            foreach (var usr in sortedAccounts) {
+                Console.WriteLine($"ID: | {usr.GetUserId()} | Name: {usr.GetUserName()} | Admin: {usr.IsUserAdmin()}");
+            }
+        } else if (answer == "name") {
+            var sortedAccounts = _bank.GetUserAccounts().OrderBy(u => u.GetUserName());
+            foreach (var usr in sortedAccounts) {
+                Console.WriteLine($"ID: | {usr.GetUserId()} | Name: {usr.GetUserName()} | Admin: {usr.IsUserAdmin()}");
+            }
+        } else {
+            foreach (var usr in _bank.GetUserAccounts()) {
+                Console.WriteLine($"ID: | {usr.GetUserId()} | Name: {usr.GetUserName()} | Admin: {usr.IsUserAdmin()}");
+            }
+        }
+
+        Console.WriteLine("Enter the ID of the user you want to modify: ");
+        Console.Write("Input: ");
+        int userId;
+        while (!int.TryParse(Console.ReadLine(), out userId)) {
+            Console.WriteLine("Invalid input. Please enter a valid user ID:");
+            Console.Write("Input: ");
+        }
+
+        User? selectedUser = _bank.GetUserAccounts().FirstOrDefault(u => u.GetUserId() == userId);
+        if (selectedUser == null) {
+            Console.WriteLine("User not found.");
+            Console.ReadKey();
+        }
+
+        Console.WriteLine($"Selected User: ID: {selectedUser?.GetUserId()} Name: {selectedUser?.GetUserName()} Admin: {selectedUser?.IsUserAdmin()}");
+
+        Console.Write("Do you want to change the admin status of this user? (yes/no): ");
+        string? changeAdminResponse = Console.ReadLine();
+        if (changeAdminResponse?.ToLower() == "yes") {
+            Console.Clear();
+            selectedUser?.SetUserAdmin();
+            Console.WriteLine($"Admin status of user '{selectedUser?.GetUserName()}' changed to {selectedUser?.IsUserAdmin()}.");
+        }
+    }
+
+    private string PromptNonEmptyInput(string message) {
+        string input;
+
+        // Using do-while to show the message from the beggining.
+        do {
+            Console.Write(message);
+            input = Console.ReadLine();
+        } while (string.IsNullOrEmpty(input));
+        return input;
+    }
+
+    private string PromptUniqueUsername() {
+        string username;
+        do {
+            username = PromptNonEmptyInput("Enter a unique username: ");
+            if (_bank.GetAllUsers().Any(u => u.GetUsername() == username)) {
+                Console.WriteLine("Username already exists. Try another one.");
+                username = null;
+            }
+        } while (username == null);
+        return username;
+    }
+
+    private int PromptIntInput(string message) {
+        int value;
+        string input;
+        do {
+            Console.Write(message);
+            input = Console.ReadLine();
+        } while (!int.TryParse(input, out value));
+        return value;
+    }
+
+    private bool PromptYesNo(string message) {
+        Console.Write(message);
+        string input = Console.ReadLine();
+        return input != null && input.ToLower() == "yes";
     }
 }
