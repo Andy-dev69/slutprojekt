@@ -1,3 +1,5 @@
+// The menu class contains all the menu related functions , including all the necesary methods.
+// The methods are named in a easy way so that they are being self explanatory
 class Menu
 {
     private Bank _bank;
