@@ -835,5 +835,55 @@ namespace slutprojekt
                 Console.WriteLine("You have no invoices!");   
             }   
         }
+        /// <summary>
+        /// Manage accounts option that displays all the accounts and lets you sort them by your liking but also change the permissions.
+        /// </summary>
+        /// <param name="bank"></param>
+        static void ManageAccounts(Bank bank) {
+            Console.Write("Do you want to sort the list by admin, ids or name? ");
+            string? answer = Console.ReadLine();
+            Console.Clear();
+            Console.WriteLine("List of User Accounts:");
+            // Sorting the accounts by the answer
+            if (answer == "admin") {
+                var sortedAccounts = bank.GetUserAccounts().OrderByDescending(u => u.IsUserAdmin());
+                foreach (var usr in sortedAccounts) {
+                    Console.WriteLine($"ID: | {usr.GetUserId()} | Name: {usr.GetUserName()} | Admin: {usr.IsUserAdmin()}");
+                }
+            } else if (answer == "name") {
+                var sortedAccounts = bank.GetUserAccounts().OrderBy(u => u.GetUserName());
+                foreach (var usr in sortedAccounts) {
+                    Console.WriteLine($"ID: | {usr.GetUserId()} | Name: {usr.GetUserName()} | Admin: {usr.IsUserAdmin()}");
+                }
+            } else {
+                foreach (var usr in bank.GetUserAccounts()) {
+                    Console.WriteLine($"ID: | {usr.GetUserId()} | Name: {usr.GetUserName()} | Admin: {usr.IsUserAdmin()}");
+                }
+            }
+
+            Console.WriteLine("Enter the ID of the user you want to modify: ");
+            Console.Write("Input: ");
+            int userId;
+            while (!int.TryParse(Console.ReadLine(), out userId)) {
+                Console.WriteLine("Invalid input. Please enter a valid user ID:");
+                Console.Write("Input: ");
+            }
+
+            User? selectedUser = bank.GetUserAccounts().FirstOrDefault(u => u.GetUserId() == userId);
+            if (selectedUser == null) {
+                Console.WriteLine("User not found.");
+                Console.ReadKey();
+            }
+
+            Console.WriteLine($"Selected User: ID: {selectedUser?.GetUserId()} Name: {selectedUser?.GetUserName()} Admin: {selectedUser?.IsUserAdmin()}");
+
+            Console.Write("Do you want to change the admin status of this user? (yes/no): ");
+            string? changeAdminResponse = Console.ReadLine();
+            if (changeAdminResponse?.ToLower() == "yes") {
+                Console.Clear();
+                selectedUser?.SetUserAdmin();
+                Console.WriteLine($"Admin status of user '{selectedUser?.GetUserName()}' changed to {selectedUser?.IsUserAdmin()}.");
+            }
+        }
     }
 }
