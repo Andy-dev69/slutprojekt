@@ -74,23 +74,15 @@ class Menu
             // Special då den kollar även ifall du är admin eller inte.
             switch (key.Key) {
                 case ConsoleKey.D1:
-                    Console.Clear();
-                    exit = true;
                     HandleTransfer(user);
                     break;
                 case ConsoleKey.D2:
-                    Console.Clear();
-                    exit = true;
                     HandleRequest(user);
                     break;
                 case ConsoleKey.D3:
-                    Console.Clear();
-                    exit = true;
                     CheckInvoices(user);
                     break;
                 case ConsoleKey.D4:
-                    Console.Clear();
-                    exit = true;
                     DisplayAccountDetails(user);
                     break;
                 case ConsoleKey.D5:
@@ -134,13 +126,9 @@ class Menu
             ConsoleKeyInfo key = Console.ReadKey();
             switch (key.Key) {
                 case ConsoleKey.D1:
-                    Console.Clear();
-                    exit = true;
                     HandleAddMoney();
                     break;
                 case ConsoleKey.D2:
-                    Console.Clear();
-                    exit = true;
                     HandleRemoveMoney();
                     break;
                 case ConsoleKey.D3:
@@ -149,8 +137,6 @@ class Menu
                     DisplayInvoiceMenu();
                     break;
                 case ConsoleKey.D4:
-                    Console.Clear();
-                    exit = true;
                     ManageAccounts();
                     break;
                 case ConsoleKey.D5:
@@ -162,6 +148,42 @@ class Menu
                     Console.Clear();
                     exit = true;
                     DisplayTerminationMessage();
+                    break;
+                default:
+                    Console.Clear();
+                    break;
+            }
+        }
+    }
+
+    private void DisplayInvoiceMenu() {
+        Console.Clear();
+        bool stop = false;
+        while (!stop)
+        {
+            User user = _bank.GetLoggedInUser();
+            Console.WriteLine($"Logged in as: {user.GetUsername()}");
+            Console.WriteLine("┌──────────── MENU ────────────┐");
+            Console.WriteLine("  1. Create Invoice             ");
+            Console.WriteLine("  2. Remove Invoice             ");
+            Console.WriteLine("                                ");
+            Console.WriteLine("  3. Back                       ");
+            Console.WriteLine("└──────────────────────────────┘");
+            Console.Write("Input: ");
+
+            ConsoleKeyInfo key = Console.ReadKey();
+            switch (key.Key)
+            {
+                case ConsoleKey.D1:
+                    CreateAdminInvoice();
+                    break;
+                case ConsoleKey.D2:
+                    RemoveInvoice();
+                    break;
+                case ConsoleKey.D3:
+                    stop = true;
+                    Console.Clear();
+                    ShowMainMenu();
                     break;
                 default:
                     Console.Clear();
@@ -207,7 +229,7 @@ class Menu
         _bank.AddUser(newUser);
 
         Console.WriteLine("Account created successfully!");
-        if (PromptYesNo("Do you want to login to your new account? (yes/no)")) {
+        if (PromptYesNo("Do you want to login to your new account? (yes/no): ")) {
             Console.WriteLine("Logging in...");
             _bank.CheckLogin(username, password);
             Console.WriteLine($"Logged in as: {_bank.GetLoggedInUser().GetUsername()}");
@@ -250,6 +272,7 @@ class Menu
         _bank.GetAccountById(accountId).Deposit(amount);
         Console.WriteLine($"You added {amount:C} to { _bank.GetAccountById(accountId).GetUserName() }'s account!");
         Console.ReadKey();
+        Console.Clear();
     }
 
     private void HandleRemoveMoney() {
@@ -269,6 +292,7 @@ class Menu
         account.Withdraw(amount);
         Console.WriteLine($"You removed {amount:C} from { account.GetUserName() }'s account!");
         Console.ReadKey();
+        Console.Clear();
     }
 
     private void HandleTransfer(User user) {
@@ -288,6 +312,7 @@ class Menu
         _bank.GetAccountById(recipientId).Deposit(amount);
         Console.WriteLine($"You transferred {amount:C} to { _bank.GetAccountById(recipientId).GetUserName() }!");
         Console.ReadKey();
+        Console.Clear();
     }
 
     private void HandleRequest(User user) {
@@ -301,19 +326,12 @@ class Menu
         Console.Write("Why are you requesting this amount?: ");
         string? title = Console.ReadLine();
         int amount = PromptIntInput("Amount: ");
-        Console.Write("Due in? (days): ");
-        int due = 0;
-        while (!int.TryParse(Console.ReadLine(), out due)) {
-            Console.Clear();
-            Console.WriteLine("Invalid input. Please enter a valid due time!");
-            Console.Write("Due in? (days): ");
-        }
-        Console.WriteLine($"Are you sure that you want to send an invoice for {amount:C} to {_bank.GetAccountById(recipientId).GetUserName()}'s account? (yes/no)");
-        string? sure = Console.ReadLine();
-        if (PromptYesNo(sure)) {
+        int due = PromptIntInput("Due in? (days): ");
+
+        if (!PromptYesNo($"Are you sure that you want to send an invoice for {amount:C} to {_bank.GetAccountById(recipientId).GetUserName()}'s account? (yes/no): ")) {
             Console.Clear();
             Console.WriteLine("Request terminated.");
-            ShowMainMenu();
+            return;
         }
 
         Console.Write("Confirmation Password: ");
@@ -332,11 +350,11 @@ class Menu
 
             Console.Clear();
             Console.WriteLine("Invoice sent successfully.");
-            ShowMainMenu();
+            return;
         } else {
             Console.Clear();
             Console.WriteLine("Incorrect password!");
-            ShowMainMenu();
+            return;
         }
     }
 
@@ -359,19 +377,19 @@ class Menu
                 if (selectedInvoice == null) {
                     Console.Clear();
                     Console.WriteLine("Invoice not found.");
-                    ShowMainMenu();
+                    return;
                 }
 
                 if (selectedInvoice.IsPayed) {
                     Console.Clear();
                     Console.WriteLine("This invoice has already been paid.");
-                    ShowMainMenu();
+                    return;
                 }
 
                 if (selectedInvoice.Description.Contains("[sent]")) {
                     Console.Clear();
                     Console.WriteLine("You can't pay your own invoice.");
-                    ShowMainMenu();
+                    return;
                 }
 
                 Console.WriteLine($"Invoice ID: {selectedInvoice.Id}");
@@ -379,10 +397,8 @@ class Menu
                 Console.WriteLine($"Description: {selectedInvoice.Description}");
                 Console.WriteLine($"Amount: {selectedInvoice.Amount:C}");
                 Console.WriteLine($"Due Date: {selectedInvoice.DueDate:d}");
-                Console.Write("Do you want to pay this invoice? (yes/no): ");
-                string input = Console.ReadLine()?.ToLower();
 
-                if (input == "yes") {
+                if (PromptYesNo("Do you want to pay this invoice? (yes/no): ")) {
                     MoneyTransfer moneyTransfer = new MoneyTransfer(_bank);
                     bool transferSuccess = moneyTransfer.TransferMoney(user.GetUserId(), selectedInvoice.InvoiceSenderID, selectedInvoice.Amount, "DSAUDJSAA");
                     if (transferSuccess) {
@@ -398,160 +414,17 @@ class Menu
                         Console.WriteLine("Transfer failed. Insufficient funds.");
                     }
                     Console.ReadKey();
+                    Console.Clear();
                 }
-                ShowMainMenu();
+                return;
             } else {
                 Console.Clear();
-                ShowMainMenu();
+                return;
             }
         } else {
             Console.Clear();
             Console.WriteLine("You have no invoices!");
-            ShowMainMenu();
-        }
-    }
-
-    private void DisplayInvoiceMenu() {
-        Console.Clear();
-        bool stop = false;
-        while (!stop)
-        {
-            User user = _bank.GetLoggedInUser();
-            Console.WriteLine($"Logged in as: {user.GetUsername()}");
-            Console.WriteLine("┌──────────── MENU ────────────┐");
-            Console.WriteLine("  1. Create Invoice             ");
-            Console.WriteLine("  2. Remove Invoice             ");
-            Console.WriteLine("                                ");
-            Console.WriteLine("  3. Back                       ");
-            Console.WriteLine("└──────────────────────────────┘");
-            Console.Write("Input: ");
-
-            ConsoleKeyInfo key = Console.ReadKey();
-                switch (key.Key)
-                {
-                    case ConsoleKey.D1:
-                        Console.Clear();   
-                        int senderAccountId = PromptIntInput("Sender Account ID: ");
-                        while (_bank.GetAccountById(senderAccountId) == null) {
-                            Console.WriteLine("Invalid account ID.");
-                            senderAccountId = PromptIntInput("Sender Account ID: ");
-                        }
-
-                        int receiverAccountId = PromptIntInput("Recipient Account ID: ");
-                        while (_bank.GetAccountById(receiverAccountId) == null) {
-                            Console.WriteLine("Invalid account ID.");
-                            receiverAccountId = PromptIntInput("Recipient Account ID: ");
-                        }
-
-                        Console.Write("Why are you requesting this amount?: ");
-                        string? title = Console.ReadLine();
-
-                        int amount = PromptIntInput("Amount: ");
-
-                        Console.Write("Due in? (days): ");
-                        int due = 0;
-                        while (!int.TryParse(Console.ReadLine(), out due)) {
-                            Console.Clear();
-                            Console.WriteLine("Invalid input. Please enter a valid due time!");
-                            Console.Write("Due in? (days): ");
-                        }
-
-                        Console.WriteLine($"Are you sure that you want to send an invoice for {amount:C} to {_bank.GetAccountById(receiverAccountId).GetUserName()}'s account? (yes/no)");
-                        string? sure = Console.ReadLine();
-                        if (!PromptYesNo(sure)) {
-                            Console.Clear();
-                            Console.WriteLine("Request terminated.");
-                            continue;
-                        }
-
-                        Console.Clear();
-
-                        User senderAccount = _bank.GetAccountById(senderAccountId);
-                        User receiverAccount = _bank.GetAccountById(receiverAccountId);
-    
-                        Console.WriteLine("Invoice sent successfully.");
-
-                        // Create and send invoice to the receiver
-                        Invoice receiverInvoice = new UnpaidInvoice(receiverAccount.GetInvoices().Count + 1, receiverAccountId, senderAccountId, title + "", amount, DateTime.Today.AddDays(due), false);
-                        receiverAccount.ReceiveInvoice(receiverInvoice);
-
-                        // Create and send invoice to the sender as confirmation
-                        Invoice senderInvoice = new UnpaidInvoice(senderAccount.GetInvoices().Count + 1, senderAccountId, receiverAccountId, title + " [sent]", amount, DateTime.Today.AddDays(due), false);
-                        senderAccount.ReceiveInvoice(senderInvoice);
-                        break;
-                    case ConsoleKey.D2:
-                        Console.Clear();
-                        bool backToMainMenu2 = false;
-                        while (!backToMainMenu2) {
-                            // Ask user for request details
-                            int accountId = PromptIntInput("Account ID: ");
-                            while (_bank.GetAccountById(accountId) == null) {
-                                Console.WriteLine("Invalid account ID.");
-                                accountId = PromptIntInput("Account ID: ");
-                            }
-
-                            Console.Clear();
-
-                            User user1 = _bank.GetAccountById(accountId);
-
-                            if (user1.GetInvoices().Count != 0) {
-                                foreach (var invoice in user1.GetInvoices()) {
-                                    if (!invoice.IsPayed) {
-                                        Console.WriteLine($"[{invoice.Id}] {invoice.Description} - Paid: {invoice.IsPayed}\nDue Date: {invoice.DueDate:d}");
-                                    } else {
-                                        Console.WriteLine($"[{invoice.Id}] {invoice.Description} - Paid: {invoice.IsPayed}");
-                                    }
-                                }
-
-                                Console.Write("Enter the ID of the invoice you want to interact with (or '0' to go back): ");
-                                int invoiceId = 0;
-                                while (!int.TryParse(Console.ReadLine(), out invoiceId) || invoiceId < 0) {
-                                    Console.WriteLine("Invalid input. Please enter a valid invoice ID (or '0' to go back): ");
-                                }
-                                if (invoiceId == 0) {
-                                    Console.Clear();
-                                } else {
-                                    Invoice? selectedInvoice = user1.GetInvoices().FirstOrDefault(i => i.Id == invoiceId);
-                                    if (selectedInvoice != null) {
-                                        Console.WriteLine($"Invoice ID: {selectedInvoice.Id}");
-                                        Console.WriteLine($"From: {_bank.GetAccountById(selectedInvoice.InvoiceSenderID).GetUserName()}");
-                                        Console.WriteLine($"Description: {selectedInvoice.Description}");
-                                        Console.WriteLine($"Amount: {selectedInvoice.Amount:C}");
-                                        Console.WriteLine($"Due Date: {selectedInvoice.DueDate:d}");
-                                        Console.Write("Do you want to delete this invoice? (yes/no): ");
-                                        string? input = Console.ReadLine();
-                                        if (PromptYesNo(input)) {
-                                            Console.Clear();
-                                            Console.WriteLine($"Removeing invoice #{selectedInvoice.Id}...");
-                                            user1.RemoveInvoice(selectedInvoice);
-                                        } else {
-                                            Console.Clear();
-                                        }
-                                    } else {
-                                        Console.Clear();
-                                        Console.WriteLine("Invoice not found.");
-                                    }
-                                }
-                            } else {
-                                Console.Clear();
-                                Console.WriteLine("User has no invoices!");   
-                            }   
-                            Console.Clear();
-                            Console.WriteLine("Invoice removed successfully.");
-
-                            backToMainMenu2 = true;
-                        }
-                        break;
-                    case ConsoleKey.D3:
-                        stop = true;
-                        Console.Clear();
-                        ShowMainMenu();
-                        break;
-                    default:
-                        Console.Clear();
-                        break;
-                }
-            
+            return;
         }
     }
 
@@ -594,16 +467,113 @@ class Menu
 
         Console.WriteLine($"Selected User: ID: {selectedUser?.GetUserId()} Name: {selectedUser?.GetUserName()} Admin: {selectedUser?.IsUserAdmin()}");
 
-        Console.Write("Do you want to change the admin status of this user? (yes/no): ");
-        string? changeAdminResponse = Console.ReadLine();
-        if (PromptYesNo(changeAdminResponse)) {
+        if (PromptYesNo("Do you want to change the admin status of this user? (yes/no): ")) {
             Console.Clear();
             selectedUser?.SetUserAdmin();
             Console.WriteLine($"Admin status of user '{selectedUser?.GetUserName()}' changed to {selectedUser?.IsUserAdmin()}.");
+        } 
+
+        Console.Clear();
+    }
+
+    private void CreateAdminInvoice() {
+        Console.Clear();
+        int senderAccountId = PromptIntInput("Sender Account ID: ");
+        while (_bank.GetAccountById(senderAccountId) == null) {
+            Console.WriteLine("Invalid account ID.");
+            senderAccountId = PromptIntInput("Sender Account ID: ");
+        }
+
+        int receiverAccountId = PromptIntInput("Recipient Account ID: ");
+        while (_bank.GetAccountById(receiverAccountId) == null) {
+            Console.WriteLine("Invalid account ID.");
+            receiverAccountId = PromptIntInput("Recipient Account ID: ");
+        }
+
+        Console.Write("Why are you requesting this amount?: ");
+        string? title = Console.ReadLine();
+
+        int amount = PromptIntInput("Amount: ");
+        int due = PromptIntInput("Due in? (days): ");
+
+        if (!PromptYesNo($"Are you sure that you want to send an invoice for {amount:C} to {_bank.GetAccountById(receiverAccountId).GetUserName()}'s account? (yes/no): ")) {
+            Console.Clear();
+            Console.WriteLine("Request terminated.");
+            return;
+        }
+
+        Console.Clear();
+
+        User senderAccount = _bank.GetAccountById(senderAccountId);
+        User receiverAccount = _bank.GetAccountById(receiverAccountId);
+
+        // Create and send invoice to the receiver
+        Invoice receiverInvoice = new UnpaidInvoice(receiverAccount.GetInvoices().Count + 1, receiverAccountId, senderAccountId, title + "", amount, DateTime.Today.AddDays(due), false);
+        receiverAccount.ReceiveInvoice(receiverInvoice);
+
+        // Create and send invoice to the sender as confirmation
+        Invoice senderInvoice = new UnpaidInvoice(senderAccount.GetInvoices().Count + 1, senderAccountId, receiverAccountId, title + " [sent]", amount, DateTime.Today.AddDays(due), false);
+        senderAccount.ReceiveInvoice(senderInvoice);
+
+        Console.Clear();
+        Console.WriteLine("Invoice sent successfully.");
+    }
+
+    private void RemoveInvoice() {
+        Console.Clear();
+        // Ask user for request details
+        int accountId = PromptIntInput("Account ID: ");
+        while (_bank.GetAccountById(accountId) == null) {
+            Console.WriteLine("Invalid account ID.");
+            accountId = PromptIntInput("Account ID: ");
+        }
+
+        Console.Clear();
+
+        User user1 = _bank.GetAccountById(accountId);
+
+        if (user1.GetInvoices().Count != 0) {
+            foreach (var invoice in user1.GetInvoices()) {
+                if (!invoice.IsPayed) {
+                    Console.WriteLine($"[{invoice.Id}] {invoice.Description} - Paid: {invoice.IsPayed}\nDue Date: {invoice.DueDate:d}");
+                } else {
+                    Console.WriteLine($"[{invoice.Id}] {invoice.Description} - Paid: {invoice.IsPayed}");
+                }
+            }
+
+            Console.Write("Enter the ID of the invoice you want to interact with (or '0' to go back): ");
+            int invoiceId = 0;
+            while (!int.TryParse(Console.ReadLine(), out invoiceId) || invoiceId < 0) {
+                Console.WriteLine("Invalid input. Please enter a valid invoice ID (or '0' to go back): ");
+            }
+            if (invoiceId == 0) {
+                Console.Clear();
+            } else {
+                Invoice? selectedInvoice = user1.GetInvoices().FirstOrDefault(i => i.Id == invoiceId);
+                if (selectedInvoice != null) {
+                    Console.WriteLine($"Invoice ID: {selectedInvoice.Id}");
+                    Console.WriteLine($"From: {_bank.GetAccountById(selectedInvoice.InvoiceSenderID).GetUserName()}");
+                    Console.WriteLine($"Description: {selectedInvoice.Description}");
+                    Console.WriteLine($"Amount: {selectedInvoice.Amount:C}");
+                    Console.WriteLine($"Due Date: {selectedInvoice.DueDate:d}");
+
+                    if (PromptYesNo("Do you want to delete this invoice? (yes/no): ")) {
+                        Console.Clear();
+                        Console.WriteLine($"Removeing invoice #{selectedInvoice.Id}...");
+                        user1.RemoveInvoice(selectedInvoice);
+                        Console.WriteLine("Invoice removed successfully.");
+                    } else {
+                        Console.Clear();
+                    }
+                } else {
+                    Console.Clear();
+                    Console.WriteLine("Invoice not found.");
+                }
+            }
         } else {
             Console.Clear();
-            ShowMainMenu();
-        }
+            Console.WriteLine("User has no invoices!");   
+        }   
     }
 
     private string PromptNonEmptyInput(string message) {
@@ -633,8 +603,13 @@ class Menu
     private int PromptIntInput(string message) {
         int value;
         string input;
+        int time = 0;
         do {
-            Console.WriteLine("Not a valid amount!");
+            if (time > 0) {
+                Console.Clear();
+                Console.WriteLine("Invalid input!");
+            }
+            time++;
             Console.Write(message);
             input = Console.ReadLine();
         } while (!int.TryParse(input, out value));
@@ -643,7 +618,7 @@ class Menu
 
     private bool PromptYesNo(string message) {
         Console.Write(message);
-        string input = Console.ReadLine();
+        string? input = Console.ReadLine();
         return input != null && input.ToLower() == "yes";
     }
 }
