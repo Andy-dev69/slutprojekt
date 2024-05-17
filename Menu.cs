@@ -19,7 +19,7 @@ class Menu
             Console.WriteLine("└──────────────────────────┘");
             Console.Write("Input: ");
 
-            ConsoleKeyInfo key = Console.ReadKey();
+            ConsoleKeyInfo key = Console.ReadKey(); // Read a key input from the user
 
             switch (key.Key) {
                 case ConsoleKey.D1:
@@ -68,7 +68,7 @@ class Menu
                 Console.WriteLine("└──────────────────────────────┘");
             }
             Console.Write("Input: ");
-            ConsoleKeyInfo key = Console.ReadKey();
+            ConsoleKeyInfo key = Console.ReadKey(); // Read a key input from the user
 
             // Switch case som kollar vilken tangent du klickar
             // Special då den kollar även ifall du är admin eller inte.
@@ -123,7 +123,8 @@ class Menu
             Console.WriteLine("  6. Exit                       ");
             Console.WriteLine("└──────────────────────────────┘");
             Console.Write("Input: ");
-            ConsoleKeyInfo key = Console.ReadKey();
+            ConsoleKeyInfo key = Console.ReadKey(); // Read a key input from the user
+
             switch (key.Key) {
                 case ConsoleKey.D1:
                     HandleAddMoney();
@@ -171,7 +172,8 @@ class Menu
             Console.WriteLine("└──────────────────────────────┘");
             Console.Write("Input: ");
 
-            ConsoleKeyInfo key = Console.ReadKey();
+            ConsoleKeyInfo key = Console.ReadKey(); // Read a key input from the user
+
             switch (key.Key)
             {
                 case ConsoleKey.D1:
@@ -201,7 +203,7 @@ class Menu
             string? username = Console.ReadLine();
             Console.Write("Password: ");
             string? password = Console.ReadLine();
-
+            // Checking the input
             if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password)) {
                 if (_bank.CheckLogin(username, password)) {
                     Console.WriteLine("Login successful!");
@@ -225,6 +227,7 @@ class Menu
         string username = PromptUniqueUsername();
         string password = PromptNonEmptyInput("Enter a password: ");
 
+        // Creating a new user at the specific bank.
         User newUser = new User(1, _bank.GetBankName(), _bank.GetAllUsers().Count + 1, name, username, password, false);
         _bank.AddUser(newUser);
 
@@ -269,6 +272,8 @@ class Menu
             Console.WriteLine("Amount must be positive.");
             amount = PromptIntInput("Amount: ");
         }
+
+        // Adding funds
         _bank.GetAccountById(accountId).Deposit(amount);
         Console.WriteLine($"You added {amount:C} to { _bank.GetAccountById(accountId).GetUserName() }'s account!");
         Console.ReadKey();
@@ -289,6 +294,8 @@ class Menu
             Console.WriteLine("Invalid amount.");
             amount = PromptIntInput("Amount: ");
         }
+
+        // Taking funds
         account.Withdraw(amount);
         Console.WriteLine($"You removed {amount:C} from { account.GetUserName() }'s account!");
         Console.ReadKey();
@@ -308,6 +315,7 @@ class Menu
             Console.WriteLine("Invalid amount.");
             amount = PromptIntInput("Amount: ");
         }
+        // Making the transaction
         user.Withdraw(amount);
         _bank.GetAccountById(recipientId).Deposit(amount);
         Console.WriteLine($"You transferred {amount:C} to { _bank.GetAccountById(recipientId).GetUserName() }!");
@@ -317,6 +325,8 @@ class Menu
 
     private void HandleRequest(User user) {
         Console.Clear();
+
+        // Asking for user inputs
         Console.WriteLine("Request Money:");
         int recipientId = PromptIntInput("Recipient Account ID: ");
         while (_bank.GetAccountById(recipientId) == null) {
@@ -361,6 +371,7 @@ class Menu
     private void CheckInvoices(User user) {
         Console.Clear();
         if (user.GetInvoices().Any()) {
+            // Displays all the user invoices.
             foreach (var invoice in user.GetInvoices()) {
                 Console.WriteLine(
                     invoice.IsPayed ? $"[{invoice.Id}] {invoice.Description} - Paid: {invoice.IsPayed}"
@@ -373,6 +384,7 @@ class Menu
                 Console.WriteLine("Invalid input. Please enter a valid invoice ID (or '0' to go back): ");
             } 
             if (invoiceId != 0) {
+                // Gets the selected invoice by the id.
                 Invoice selectedInvoice = user.GetInvoices().FirstOrDefault(i => i.Id == invoiceId);
                 if (selectedInvoice == null) {
                     Console.Clear();
@@ -399,9 +411,11 @@ class Menu
                 Console.WriteLine($"Due Date: {selectedInvoice.DueDate:d}");
 
                 if (PromptYesNo("Do you want to pay this invoice? (yes/no): ")) {
+                    // Performs the transfer
                     MoneyTransfer moneyTransfer = new MoneyTransfer(_bank);
                     bool transferSuccess = moneyTransfer.TransferMoney(user.GetUserId(), selectedInvoice.InvoiceSenderID, selectedInvoice.Amount, "DSAUDJSAA");
                     if (transferSuccess) {
+                        // setting the invoices as paid.
                         selectedInvoice.SetPaidStatus(true);
 
                         var sender = _bank.GetAccountById(selectedInvoice.InvoiceSenderID);
