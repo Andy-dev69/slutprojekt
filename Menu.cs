@@ -8,6 +8,9 @@ class Menu
         _bank = bank;
     }
 
+    /// <summary>
+    /// Displays the guest menu
+    /// </summary>
     public void DisplayGuestMenu() {
         bool exit = false;
         while (!exit)
@@ -45,7 +48,9 @@ class Menu
             }
         }
     }
-
+    /// <summary>
+    /// Displays the main menu
+    /// </summary>
     public void ShowMainMenu() {
         bool exit = false;
         while (!exit)
@@ -109,7 +114,9 @@ class Menu
             }
         }
     }
-
+    /// <summary>
+    /// Displays the admin menu
+    /// </summary>
     private void DisplayAdminMenu() {
         bool exit = false;
         while (!exit) {
@@ -158,7 +165,9 @@ class Menu
             }
         }
     }
-
+    /// <summary>
+    /// Display the admin invoice menu
+    /// </summary>
     private void DisplayInvoiceMenu() {
         Console.Clear();
         bool stop = false;
@@ -195,7 +204,9 @@ class Menu
             }
         }
     }
-
+    /// <summary>
+    /// Handle the user login feature
+    /// </summary>
     private void HandleLogin() {
         Console.Clear();
         while (true)
@@ -222,7 +233,9 @@ class Menu
             }
         }
     }
-
+    /// <summary>
+    /// Handle the create account feature
+    /// </summary>
     private void HandleCreateAccount() {
         Console.Clear();
         string name = PromptNonEmptyInput("Enter your full name: ");
@@ -244,7 +257,10 @@ class Menu
             DisplayGuestMenu();
         }
     }
-    
+    /// <summary>
+    /// Displays user account details
+    /// </summary>
+    /// <param name="user"></param>
     private void DisplayAccountDetails(User user) {
         Console.Clear();
         user.printUserDetails();
@@ -252,7 +268,9 @@ class Menu
         Console.ReadKey();
         Console.Clear();
     }
-
+    /// <summary>
+    /// Display the exit message
+    /// </summary>
     private void DisplayTerminationMessage() {
         Console.Clear();
         Console.WriteLine("┌────────────────────┐");
@@ -260,7 +278,9 @@ class Menu
         Console.WriteLine("└────────────────────┘");
         Environment.Exit(1);
     }
-
+    /// <summary>
+    /// Handle add money
+    /// </summary>
     private void HandleAddMoney() {
         Console.Clear();
         Console.WriteLine("Enter transfer details:");
@@ -281,7 +301,9 @@ class Menu
         Console.ReadKey();
         Console.Clear();
     }
-
+    /// <summary>
+    /// Handle remove money
+    /// </summary>
     private void HandleRemoveMoney() {
         Console.Clear();
         Console.WriteLine("Enter transfer details:");
@@ -303,7 +325,9 @@ class Menu
         Console.ReadKey();
         Console.Clear();
     }
-
+    /// <summary>
+    /// Handle transfer money
+    /// </summary>
     private void HandleTransfer(User user) {
         Console.Clear();
         Console.WriteLine("Transfer Money:");
@@ -324,7 +348,10 @@ class Menu
         Console.ReadKey();
         Console.Clear();
     }
-
+    /// <summary>
+    /// Handle Request money from user by sending a invoice
+    /// </summary>
+    /// <param name="user"></param>
     private void HandleRequest(User user) {
         Console.Clear();
 
@@ -369,7 +396,10 @@ class Menu
             return;
         }
     }
-
+    /// <summary>
+    /// Checking user invoices
+    /// </summary>
+    /// <param name="user"></param>
     private void CheckInvoices(User user) {
         Console.Clear();
         if (user.GetInvoices().Any()) {
@@ -443,7 +473,9 @@ class Menu
             return;
         }
     }
-
+    /// <summary>
+    /// Manage account menu for the admin members
+    /// </summary>
     private void ManageAccounts() {
         Console.Clear();
         Console.Write("Do you want to sort the list by admin, ids or name? ");
@@ -491,7 +523,9 @@ class Menu
 
         Console.Clear();
     }
-
+    /// <summary>
+    /// Create invoice by admin
+    /// </summary>
     private void CreateAdminInvoice() {
         Console.Clear();
         int senderAccountId = PromptIntInput("Sender Account ID: ");
@@ -534,7 +568,9 @@ class Menu
         Console.Clear();
         Console.WriteLine("Invoice sent successfully.");
     }
-
+    /// <summary>
+    /// Remove invoice from user by choice
+    /// </summary>
     private void RemoveInvoice() {
         Console.Clear();
         // Ask user for request details
@@ -591,7 +627,11 @@ class Menu
             Console.WriteLine("User has no invoices!");   
         }   
     }
-
+    /// <summary>
+    /// Method that checks for non empty inputs
+    /// </summary>
+    /// <param name="message"></param>
+    /// <returns></returns>
     private string PromptNonEmptyInput(string message) {
         string input;
 
@@ -603,7 +643,10 @@ class Menu
 
         return input;
     }
-
+    /// <summary>
+    /// Method that checks if a username is already used
+    /// </summary>
+    /// <returns></returns>
     private string PromptUniqueUsername() {
         string username;
         do {
@@ -615,7 +658,11 @@ class Menu
         } while (username == null);
         return username;
     }
-
+    /// <summary>
+    /// Method that checks if the input is a valid number
+    /// </summary>
+    /// <param name="message"></param>
+    /// <returns></returns>
     private int PromptIntInput(string message) {
         int value;
         string input;
@@ -631,7 +678,11 @@ class Menu
         } while (!int.TryParse(input, out value));
         return value;
     }
-
+    /// <summary>
+    /// Method that returns if the input is yes or no (true or false)
+    /// </summary>
+    /// <param name="message"></param>
+    /// <returns></returns>
     private bool PromptYesNo(string message) {
         Console.Write(message);
         string? input = Console.ReadLine();
